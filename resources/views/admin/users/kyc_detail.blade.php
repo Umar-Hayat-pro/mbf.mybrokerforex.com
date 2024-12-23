@@ -6,7 +6,7 @@
                 <div class="card-body">
                     @if($user->kyc_data)
                         <ul class="list-group">
-                          @foreach($user->kyc_data as $val)
+                          @foreach($user->kyc_data as $index => $val)
                           @continue(!$val->value)
                           <li class="list-group-item d-flex justify-content-between align-items-center">
                             {{__($val->name)}}
@@ -19,31 +19,32 @@
                                 <div class="mt-2">
                                     <img src="{{ asset(getFilePath('verify') . '/' . $val->value) }}"
                                         alt="Image Preview" class="img-fluid"
-                                        style="width: 300px; object-fit: contain; height: 300px; cursor: pointer;"
-                                        data-bs-toggle="modal" data-bs-target="#imageModal" />
+                                        style="width: 250px; object-fit: contain; height: 250px; cursor: pointer;"
+                                        data-bs-toggle="modal" data-bs-target="#imageModal{{$index}}" /> <!-- Unique modal ID -->
                                         
                                     <!-- Bootstrap Modal for larger image preview with zoom functionality -->
-                                    <div class="modal fade" id="imageModal" tabindex="-1"
-                                        aria-labelledby="imageModalLabel" aria-hidden="true">
+                                    <div class="modal fade" id="imageModal{{$index}}" tabindex="-1"
+                                        aria-labelledby="imageModalLabel{{$index}}" aria-hidden="true"> <!-- Unique modal ID -->
                                         <div class="modal-dialog modal-lg modal-dialog-centered">
                                             <div class="modal-content">
                                                 <div class="modal-header">
-                                                    <h5 class="modal-title" id="imageModalLabel">Image Preview</h5>
+                                                    <h5 class="modal-title" id="imageModalLabel{{$index}}">Image Preview</h5> 
+													<!-- Unique modal label -->
                                                     <button type="button" class="btn-close"
-                                                        data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body text-center">
-                                                    <img src="{{ asset(getFilePath('verify') . '/' . $val->value) }}"
-                                                        alt="Large Image Preview"
-                                                        class="img-fluid modal-image zoomable-image"
-                                                        id="zoomImage" style="cursor: zoom-in;" />
+                                                            data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        <img src="{{ asset(getFilePath('verify') . '/' . $val->value) }}"
+                                             alt="Large Image Preview"
+                                             class="img-fluid modal-image zoomable-image"
+                                             id="zoomImage{{$index}}" style="cursor: zoom-in;" /> <!-- Unique image ID -->
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 @endif
-                                        <a href="{{ route('admin.download.attachment',encrypt(getFilePath('verify').'/'.$val->value)) }}" class="me-3"><i class="fa fa-file"></i>  @lang('Attachment') </a>
+                                      <a href="{{ route('admin.download.attachment',encrypt(getFilePath('verify').'/'.$val->value)) }}" 										class="me-3"><i class="fa fa-file"></i>  @lang('Download') </a>
                                      @else
                                         @lang('No File')
                                     @endif
@@ -58,7 +59,7 @@
                         <h5 class="text-center">@lang('KYC data not found')</h5>
                     @endif
 
-                    @if($user->kv == Status::KYC_UNVERIFIED)
+                     @if($user->kv == Status::KYC_UNVERIFIED)
                     <div class="my-3">
                         <h6>@lang('Rejection Reason')</h6>
                         <p>{{ $user->kyc_rejection_reason }}</p>
