@@ -102,7 +102,7 @@ Route::middleware('admin')->group(function () {
         Route::get('kyc-unverified', 'kycUnverifiedUsers')->name('kyc.unverified');
         Route::get('kyc-pending', 'kycPendingUsers')->name('kyc.pending');
         Route::get('mobile-verified', 'mobileVerifiedUsers')->name('mobile.verified');
-		
+
         Route::get('detail/{id}', 'detail')->name('detail');
 
         Route::get('kyc-data/{id}', 'kycDetails')->name('kyc.details');
@@ -118,10 +118,6 @@ Route::middleware('admin')->group(function () {
         Route::get('send-notification', 'showNotificationAllForm')->name('notification.all');
         Route::post('send-notification', 'sendNotificationAll')->name('notification.all.send');
         Route::get('notification-log/{id}', 'notificationLog')->name('notification.log');
-
-
-
-
     });
 
     // Subscriber
@@ -157,8 +153,6 @@ Route::middleware('admin')->group(function () {
     });
 
 
-
-
     //manage p2p
     Route::namespace("P2P")->prefix('p2p')->name('p2p.')->group(function () {
         Route::controller('PaymentMethodController')->name('payment.method.')->prefix('payment-method')->group(function () {
@@ -186,8 +180,6 @@ Route::middleware('admin')->group(function () {
         });
     });
 
-
-
     // DEPOSIT SYSTEM
     Route::controller('DepositController')->prefix('deposit')->name('deposit.')->group(function () {
         Route::get('/', 'deposit')->name('list');
@@ -201,7 +193,6 @@ Route::middleware('admin')->group(function () {
         Route::post('approve/{id}', 'approve')->name('approve');
 
         // web.php (Routes)
-
 
     });
     Route::post('/admin/deposit/{id}/comment', [CommentController::class, 'store'])->name('deposit.comment');
@@ -219,7 +210,6 @@ Route::middleware('admin')->group(function () {
             Route::post('approve', 'approve')->name('approve');
             Route::post('reject', 'reject')->name('reject');
         });
-
 
         // Withdraw Method
         Route::controller('WithdrawMethodController')->prefix('method')->name('method.')->group(function () {
@@ -241,8 +231,6 @@ Route::middleware('admin')->group(function () {
         Route::get('email/detail/{id}', 'emailDetails')->name('email.details');
     });
 
-
-
     // Admin Support
     Route::controller('SupportTicketController')->prefix('ticket')->name('ticket.')->group(function () {
         Route::get('/', 'tickets')->name('index');
@@ -255,7 +243,6 @@ Route::middleware('admin')->group(function () {
         Route::get('download/{ticket}', 'ticketDownload')->name('download');
         Route::post('delete/{id}', 'ticketDelete')->name('delete');
     });
-
 
     // Language Manager
     Route::controller('LanguageController')->prefix('language')->name('language.')->group(function () {
@@ -333,7 +320,6 @@ Route::middleware('admin')->group(function () {
         Route::post('schedule/log/flush/{id}', 'logFlush')->name('log.flush');
     });
 
-
     //KYC setting
     Route::controller('KycController')->group(function () {
         Route::get('kyc-setting', 'setting')->name('kyc.setting');
@@ -374,7 +360,6 @@ Route::middleware('admin')->group(function () {
         Route::post('default/{id}', 'default')->name('default');
     });
 
-
     //System Information
     Route::controller('SystemController')->name('system.')->prefix('system')->group(function () {
         Route::get('info', 'systemInfo')->name('info');
@@ -391,10 +376,8 @@ Route::middleware('admin')->group(function () {
         Route::get('status/{id}', 'status')->name('status');
     });
 
-
     // SEO
     Route::get('seo', 'FrontendController@seoEdit')->name('seo');
-
 
     // Frontend
     Route::name('frontend.')->prefix('frontend')->group(function () {
@@ -418,79 +401,67 @@ Route::middleware('admin')->group(function () {
             Route::post('manage-section/{id}', 'manageSectionUpdate')->name('manage.section.update');
         });
     });
+
+    // Live Account Routes:
+    Route::controller('Live_DataController')->prefix('live_accounts')->group(function () {
+        Route::get('/', 'index')->name('live_accounts.index');
+    });
+
+    // Demo Accounts Routes:
+    Route::controller('Demo_DataController')->prefix('demo_accounts')->group(function () {
+        Route::get('/', 'index')->name('demo_accounts.index');
+    });
+
+    // Blacklisted Countries Routes: 
+    Route::controller('BlacklistController')->prefix('blacklist')->group(function () {
+        Route::get('/', 'index')->name('blacklist.index');
+        Route::get('/create', 'create')->name('blacklist.create');
+        Route::post('/', 'store')->name('blacklist.store');
+        Route::delete('/{id}', 'destroy')->name('blacklist.destroy');
+    });
+    // Account-Type Controller Routes:
+    Route::controller('AccountTypeController')->prefix('account_type')->group(function () {
+        Route::get('/', 'index')->name('accounttype.index');
+        Route::get('/createNew', 'create')->name('accounttype.create');
+        Route::post('/store', 'store')->name('accounttype.store');
+        Route::get('/{id}/edit', 'edit')->name('accounttype.edit');
+        Route::put('/{id}', 'update')->name('accounttype.update');
+        Route::delete('/{id}', 'destroy')->name('accounttype.destroy');
+        Route::post('/create-account', 'createAccount')->name('accounttype.create');
+    });
+    // IB--Account Making Routes:
+    Route::controller('ibAccountController')->prefix('ibAccountType')->group(function () {
+        Route::get('/', 'index')->name('ibaccounttype.index');
+        Route::get('/create', 'create')->name('ibaccounttype.create');
+        Route::post('/store', 'store')->name('ibaccounttype.store');
+        Route::get('/{id}/edit', 'edit')->name('ibaccounttype.edit');
+        Route::put('/{id}', 'update')->name('ibaccounttype.update');
+        Route::delete('/{id}', 'destroy')->name('ibaccounttype.destroy');
+    });
+
+    // IB-Admin --Routes:
+    Route::controller('IbDataController')->prefix('ib_settings')->group(function () {
+        Route::get('/pendingIB', 'pendingAccountsByStatus')->name('pending_ib');
+        Route::get('/activeIB', 'activeAccountsByIbStatus')->name('active_ib');
+        Route::get('/rejectedIB', 'rejectedAccountsByStatus')->name('rejected_ib');
+        Route::get('/allIB', 'allAccounts')->name('all_ib');
+        Route::get('/submitted_Forms', 'listForms')->name('form_ib');
+        Route::get('/be_ib', 'formForUser')->name('show_data');//this is the user form
+        Route::get('form_data/{id}', 'showFormData')->name('dataView');
+        Route::post('/create', 'create')->name('create_ib');//this is to create
+        Route::post('/store', 'storeUserForm')->name('store_user');
+        Route::delete('/form_ib/{user_id}', 'destroyByUserId')->name('form_ib.destroy_by_user_id');
+        Route::match(['put', 'post'], 'form_ib/{user_id}', 'update')->name('become_ib.update');
+        Route::get('/ibCheck', 'CheckKyc')->name('kycVerification');
+    });
+
+
 });
 
-//For AccountType
-Route::controller('AccountTypeController')->prefix('account_type')->group(function () {
-    Route::get('/', 'index')->name('accounttype.index');
-    Route::get('/createNew', 'create')->name('accounttype.create');
-    Route::post('/store', 'store')->name('accounttype.store');
-    Route::get('/{id}/edit', 'edit')->name('accounttype.edit');
-    Route::put('/{id}', 'update')->name('accounttype.update');
-    Route::delete('/{id}', 'destroy')->name('accounttype.destroy');
-    Route::post('/create-account', 'createAccount')->name('accounttype.create');
-});
-// End  For AccountType;
-
-// These Routes are For IbAccountType
-Route::controller('ibAccountController')->prefix('ibAccountType')->group(function () {
-    Route::get('/', 'index')->name('ibaccounttype.index');
-    Route::get('/create', 'create')->name('ibaccounttype.create');
-    Route::post('/store', 'store')->name('ibaccounttype.store');
-    Route::get('/{id}/edit', 'edit')->name('ibaccounttype.edit');
-    Route::put('/{id}', 'update')->name('ibaccounttype.update');
-    Route::delete('/{id}', 'destroy')->name('ibaccounttype.destroy');
-});
-//Routes for IBAccountType ends here
 
 
-Route::controller('Demo_DataController')->prefix('demo_accounts')->group(function () {
-    Route::get('/', 'index')->name('demo_accounts.index');
-    Route::get('/fetch', 'fetch')->name('demo_account.fetch');
-    Route::get('/all', 'all')->name('demo_account.all');
-    Route::get('/active', 'active')->name('demo_account.active');
-    Route::get('/inactive', 'inactive')->name('demo_account.inactive');
-    Route::get('/currency/usd', 'currencyUsd')->name('demo_account.currency.usd');
-    Route::get('/currency/eur', 'currencyEur')->name('demo_account.currency.eur');
-    Route::get('/total-balance', 'totalBalance')->name('demo_account.total_balance');
-});
-
-// Routes for Live Accounts
-Route::controller('Live_DataController')->prefix('live_accounts')->group(function () {
-    Route::get('/', 'index')->name('live_accounts.index');
-    Route::get('/fetch', 'fetch')->name('live_account.fetch');
-    Route::get('/all', 'all')->name('live_account.all');
-    Route::get('/active', 'active')->name('live_account.active');
-    Route::get('/inactive', 'inactive')->name('live_account.inactive');
-    Route::get('/currency/usd', 'currencyUsd')->name('live_account.currency.usd');
-    Route::get('/currency/eur', 'currencyEur')->name('live_account.currency.eur');
-    Route::get('/total-balance', 'totalBalance')->name('live_account.total_balance');
-});
-//End For Live Account;
 
 
-// Routes for Blacklist Countries
-Route::controller('BlacklistController')->prefix('blacklist')->group(function () {
-    Route::get('/', 'index')->name('blacklist.index');
-    Route::get('/create', 'create')->name('blacklist.create');
-    Route::post('/', 'store')->name('blacklist.store');
-    Route::delete('/{id}', 'destroy')->name('blacklist.destroy');
-});
 
 
-// IB Settings in Admin dashboard start here
-Route::controller('IbDataController')->prefix('ib_settings')->group(function () {
-    Route::get('/pendingIB', 'pendingAccountsByStatus')->name('pending_ib');
-    Route::get('/activeIB', 'activeAccountsByIbStatus')->name('active_ib');
-    Route::get('/rejectedIB', 'rejectedAccountsByStatus')->name('rejected_ib');
-    Route::get('/allIB', 'allAccounts')->name('all_ib');
-    Route::get('/submitted_Forms', 'listForms')->name('form_ib');
-    Route::get('/be_ib', 'formForUser')->name('show_data');//this is the user form
-    Route::get('form_data/{id}', 'showFormData')->name('dataView');
-    Route::post('/create', 'create')->name('create_ib');//this is to create
-    Route::post('/store', 'storeUserForm')->name('store_user');
-    Route::delete('/form_ib/{user_id}', 'destroyByUserId')->name('form_ib.destroy_by_user_id');
-    Route::match(['put', 'post'], 'form_ib/{user_id}', 'update')->name('become_ib.update');
-    Route::get('/ibCheck', 'CheckKyc')->name('kycVerification');
-});
 
