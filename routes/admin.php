@@ -451,8 +451,9 @@ Route::middleware('admin')->group(function () {
         Route::post('/create', 'create')->name('create_ib');//this is to create
         Route::post('/store', 'storeUserForm')->name('store_user');
         Route::delete('/form_ib/{user_id}', 'destroyByUserId')->name('form_ib.destroy_by_user_id');
-        Route::match(['put', 'post'], 'form_ib/{user_id}', 'update')->name('become_ib.update');
+        // Route::match(['put', 'post'], 'form_ib/{user_id}', 'update')->name('become_ib.update');
         Route::get('/ibCheck', 'CheckKyc')->name('kycVerification');
+        Route::match(['put', 'post'], '/approve-account{user_id}', 'createAccount')->name('become_ib.createAccount');
     });
 
 

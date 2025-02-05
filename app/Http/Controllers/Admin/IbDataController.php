@@ -140,26 +140,26 @@ class IbDataController extends Controller
 
 
 
- 
+
 
     public function listForms(Request $request)
-{
-    $pageTitle = 'Submitted Forms';
+    {
+        $pageTitle = 'Submitted Forms';
 
-    try {
-        // Retrieve all forms where ib_status is 1, 2, or 3, ordered by created_at in descending order
-        $formList = FormIb::whereIn('partner', [1, 2, 3])
-                          ->orderBy('created_at', 'desc')
-                          ->get()
-                          ->toArray();
-    } catch (QueryException $e) {
-        $formList = [];
+        try {
+            // Retrieve all forms where ib_status is 1, 2, or 3, ordered by created_at in descending order
+            $formList = FormIb::whereIn('partner', [1, 2, 3])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->toArray();
+        } catch (QueryException $e) {
+            $formList = [];
+        }
+
+        $paginator = $this->paginateArray($formList, $request);
+
+        return view('admin.becomeIB.list', compact('paginator', 'pageTitle'));
     }
-
-    $paginator = $this->paginateArray($formList, $request);
-
-    return view('admin.becomeIB.list', compact('paginator', 'pageTitle'));
-}
 
 
 
@@ -198,9 +198,9 @@ class IbDataController extends Controller
             'selectable_options' => 'required|array',
             'terms_agreement' => 'required|boolean',
         ]);
-    
+
         $user = auth()->user();
-    
+
         // Prepare the data for saving
         $newData = [
             'user_id' => $user->id,
@@ -217,21 +217,21 @@ class IbDataController extends Controller
             'terms_agreement' => $request->input('terms_agreement'),
             'partner' => 2, // Set partner to 2 for the form data
         ];
-    
+
         // Save the form data to the database
         FormIb::create($newData);
-    
+
         // Update the user's partner field to 2
         $user->partner = 2;
         $user->save();
-    
+
         // Prepare the notification
         $notify[] = ['success', 'Form Submitted Successfully'];
-    
+
         // Redirect the user with a notification
         return redirect()->route('user.home')->withNotify($notify);
     }
-    
+
 
 
 
@@ -243,7 +243,7 @@ class IbDataController extends Controller
         $formData = optional(FormIb::where('user_id', $id)->first());
 
         if (!$formData) {
-            $notify[] = ['error','Form Data not Found'];
+            $notify[] = ['error', 'Form Data not Found'];
             return redirect()->route('admin.form_ib')->withNotify($notify);
         }
 
@@ -260,24 +260,24 @@ class IbDataController extends Controller
         $form = FormIb::where('user_id', $id)->first();
         // Check if the form exists
         if (!$form) {
-            $notify[] = ['error','Form Not Found'];
+            $notify[] = ['error', 'Form Not Found'];
             return redirect()->route('admin.form_ib')->withNotify($notify);
         }
-        
+
         // Find the user by the user_id stored in the FormIb record
         $user = User::where('id', $id)->first();
-        
+
         // Check if the user exists
         if (!$user) {
-            $notify[] = ['error','User Not Found'];
+            $notify[] = ['error', 'User Not Found'];
             return redirect()->route('admin.form_ib');
         }
-        
+
         // Validate the input, specifically the ib_status
         $request->validate([
             'partner' => 'in:1,2', // Ensure ib_status is one of the valid values
         ]);
-        
+
         // Update the ib_status based on the input
         $form->partner = $request->input('ib_status');
         // Find the associated User and update ib_status
@@ -287,7 +287,7 @@ class IbDataController extends Controller
         $form->save();
 
         notify($user, 'Data_UPDATED', []);
-        $notify[] = ['success','User Data Updated Successfully'];
+        $notify[] = ['success', 'User Data Updated Successfully'];
 
 
         // Redirect back with success notification
@@ -314,20 +314,97 @@ class IbDataController extends Controller
     {
         $user = Auth::user();
 
-        if($user->kv == 1 ){
+        if ($user->kv == 1) {
             return redirect()->route('user.home');
-        }elseif($user->kv == 2)
-        {
-            $notify[] = ['error','Kyc is in Pending'];
+        } elseif ($user->kv == 2) {
+            $notify[] = ['error', 'Kyc is in Pending'];
             return redirect()->route('user.home')->withNotify($notify);
-        }else{
-            $notify[] = ['error','You need to be kyc verified'];
+        } else {
+            $notify[] = ['error', 'You need to be kyc verified'];
             return redirect()->route('user.home')->withNotify($notify);
         }
-    
+
     }
 
-    
+    public function createAccount(Request $request, $id)
+    {
+        $server_ip = '188.240.63.163';
+        $manager = '10007';
+        $manager_pswd = 'TfTe*wA1';
+
+        // Fetch user and form data
+        $user = User::find($id);
+        $form = FormIb::where('user_id', $id)->first();
+
+        // Validate existence of user and form
+        if (!$user || !$form) {
+            $notify[] = ['error', !$user ? 'User not found' : 'Form not found'];
+            return redirect()->route('admin.form_ib')->withNotify($notify);
+        }
+
+        // Validate the request
+        $validatedData = $request->validate([
+            'ib_status' => 'required|in:1,2', // Only validate IB status from form
+        ]);
+
+
+        $leverage = 100;
+        $initialBalance = 0;
+
+
+        // Prepare data for account creation
+        $group = "real\\Multi-IB\\Default";
+
+
+        $command = "C:\\AccountCreate\\bin\\Release\\net8.0\\publish\\AccountCreate.exe" .
+            " " . escapeshellarg($user->first_name) .
+            " " . escapeshellarg($user->lastname) .
+            " " . escapeshellarg($group) .
+            " " . escapeshellarg($leverage) .
+            " " . escapeshellarg($user->email) .
+            " " . escapeshellarg($initialBalance ?? 'Nil') .
+            " " . escapeshellarg($country ?? 'Nil') .
+            " " . escapeshellarg($state ?? 'Nil') .
+            " " . escapeshellarg($city ?? 'Nil') .
+            " " . escapeshellarg($address ?? 'Nil') .
+            " " . escapeshellarg($zipcode ?? 'Nil') .
+            " " . escapeshellarg($company ?? 'Nil') .
+            " " . escapeshellarg($user->phone) .
+            " " . escapeshellarg($status ?? 'RE') .
+            " " . escapeshellarg($manager) .
+            " " . escapeshellarg($manager_pswd) .
+            " " . escapeshellarg($server_ip);
+
+
+
+        // Execute the account creation command
+        $outputFile = storage_path('logs/account_create_output.txt');
+
+        exec($command, $output, $returnVar);
+
+
+
+        // Log output and handle errors
+        file_put_contents($outputFile, implode("\n", $output));
+
+        if ($returnVar !== 0) {
+            $notify[] = ['error', 'Failed to create Account. Please try again later.'];
+            return redirect()->route('admin.form_ib')->withNotify($notify);
+        }
+
+        // Update form and user status
+        $form->partner = 1;
+        $user->partner = 1;
+
+        $user->save();
+        $form->save();
+
+        $notify[] = ['success', 'Account Created and User data updated successfully.'];
+        return redirect()->route('admin.form_ib')->withNotify($notify);// Redirect to the same route
+    }
+
+
+
 
 }
 
