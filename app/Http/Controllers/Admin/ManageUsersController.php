@@ -23,7 +23,7 @@ class ManageUsersController extends Controller
     public function allUsers()
     {
         $pageTitle = 'All Users';
-        $users     = $this->userData();
+        $users = $this->userData();
         return view('admin.users.list', compact('pageTitle', 'users'));
     }
 
@@ -96,24 +96,30 @@ class ManageUsersController extends Controller
 
     public function detail($id)
     {
-        $user      = User::with('wallets.currency')->findOrFail($id);
+        $user = User::with('wallets.currency')->findOrFail($id);
         $pageTitle = 'User Detail - ' . $user->username;
 
-        $widget                      = [];
-        $widget['total_trade']       = Trade::where('trader_id', $user->id)->count();
-        $widget['total_order']       = Trade::where('order_id', $user->id)->count();
-        $widget['total_deposit']     = Deposit::where('user_id', $user->id)->where('status', Status::PAYMENT_SUCCESS)->count();
+        $widget = [];
+        $widget['total_trade'] = Trade::where('trader_id', $user->id)->count();
+        $widget['total_order'] = Trade::where('order_id', $user->id)->count();
+        $widget['total_deposit'] = Deposit::where('user_id', $user->id)->where('status', Status::PAYMENT_SUCCESS)->count();
         $widget['total_transaction'] = Transaction::where('user_id', $user->id)->count();
 
-        $countries  = json_decode(file_get_contents(resource_path('views/partials/country.json')));
+        $countries = json_decode(file_get_contents(resource_path('views/partials/country.json')));
         $currencies = Currency::active()->get();
 
         $accounts = DB::connection('mbf-dbmt5')
-        ->table('mt5_users')
-        ->where('Email', $user->email)
-        ->get();
+            ->table('mt5_users')
+            ->where('Email', $user->email)
+            ->get();
 
-        return view('admin.users.detail', compact('pageTitle', 'user', 'widget', 'countries','accounts', 'currencies'));
+        $ib_accounts = DB::connection('mbf-dbmt5')
+            ->table('mt5_users')
+            ->where('Email', $user->email)
+            ->where('Group', 'like', '%Multi-IB%')
+            ->get();
+
+        return view('admin.users.detail', compact('pageTitle', 'user', 'widget', 'countries', 'accounts', 'currencies', 'ib_accounts'));
     }
 
 
@@ -142,8 +148,8 @@ class ManageUsersController extends Controller
         $request->validate([
             'reason' => 'required'
         ]);
-        $user                       = User::findOrFail($id);
-        $user->kv                   = Status::KYC_UNVERIFIED;
+        $user = User::findOrFail($id);
+        $user->kv = Status::KYC_UNVERIFIED;
         $user->kyc_rejection_reason = $request->reason;
         $user->save();
 
@@ -158,14 +164,14 @@ class ManageUsersController extends Controller
 
     public function update(Request $request, $id)
     {
-        $user         = User::findOrFail($id);
-        $countryData  = json_decode(file_get_contents(resource_path('views/partials/country.json')));
-        $countryArray = (array)$countryData;
-        $countries    = implode(',', array_keys($countryArray));
+        $user = User::findOrFail($id);
+        $countryData = json_decode(file_get_contents(resource_path('views/partials/country.json')));
+        $countryArray = (array) $countryData;
+        $countries = implode(',', array_keys($countryArray));
 
-        $countryCode    = $request->country;
-        $country        = $countryData->$countryCode->country;
-        $dialCode       = $countryData->$countryCode->dial_code;
+        $countryCode = $request->country;
+        $country = $countryData->$countryCode->country;
+        $dialCode = $countryData->$countryCode->dial_code;
 
         $request->validate([
             'firstname' => 'required|string|max:40',
@@ -209,25 +215,25 @@ class ManageUsersController extends Controller
         return back()->withNotify($notify);
     }
 
-  
+
 
 
     public function addSubBalance(Request $request, $id)
     {
         $request->validate([
-            'amount'      => 'required|numeric|gt:0',
-            'wallet'      => 'required|integer',
-            'act'         => 'required|in:add,sub',
-            'remark'      => 'required|string|max:255',
+            'amount' => 'required|numeric|gt:0',
+            'wallet' => 'required|integer',
+            'act' => 'required|in:add,sub',
+            'remark' => 'required|string|max:255',
             'wallet_type' => 'required|in:' . implode(',', array_keys((array) gs('wallet_types')))
         ]);
 
-        $user        = User::findOrFail($id);
+        $user = User::findOrFail($id);
         $walletScope = $request->wallet_type;
-        $wallet      = Wallet::where('user_id', $user->id)->$walletScope()->where('currency_id',$request->wallet)->firstOrFail();
+        $wallet = Wallet::where('user_id', $user->id)->$walletScope()->where('currency_id', $request->wallet)->firstOrFail();
 
         $amount = $request->amount;
-        $trx    = getTrx();
+        $trx = getTrx();
 
 
         $transaction = new Transaction();
@@ -252,7 +258,7 @@ class ManageUsersController extends Controller
             $wallet->save();
 
             $transaction->trx_type = '-';
-            $transaction->remark   = 'balance_subtract';
+            $transaction->remark = 'balance_subtract';
 
             $notifyTemplate = 'BAL_SUB';
             $notify[] = ['success', $wallet->currency->sign . $amount . ' subtracted successfully'];
@@ -260,21 +266,21 @@ class ManageUsersController extends Controller
 
         $user->save();
 
-        $transaction->user_id      = $user->id;
-        $transaction->wallet_id    = $wallet->id;
-        $transaction->amount       = $amount;
+        $transaction->user_id = $user->id;
+        $transaction->wallet_id = $wallet->id;
+        $transaction->amount = $amount;
         $transaction->post_balance = $wallet->balance;
-        $transaction->charge       = 0;
-        $transaction->trx          = $trx;
-        $transaction->details      = $request->remark;
+        $transaction->charge = 0;
+        $transaction->trx = $trx;
+        $transaction->details = $request->remark;
         $transaction->save();
 
 
         notify($user, $notifyTemplate, [
-            'trx'             => $trx,
-            'amount'          => showAmount($amount),
-            'remark'          => $request->remark,
-            'post_balance'    => showAmount($wallet->balance),
+            'trx' => $trx,
+            'amount' => showAmount($amount),
+            'remark' => $request->remark,
+            'post_balance' => showAmount($wallet->balance),
             'wallet_currency' => @$wallet->currency->symbol,
         ]);
 
@@ -284,7 +290,7 @@ class ManageUsersController extends Controller
     public function login($id)
     {
         Auth::loginUsingId($id);
-        
+
         return to_route('user.home');
     }
 
@@ -354,20 +360,21 @@ class ManageUsersController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-            'message'                      => 'required',
-            'subject'                      => 'required',
-            'start'                        => 'required',
-            'batch'                        => 'required',
-            'being_sent_to'                => 'required',
-            'user'                         => 'required_if:being_sent_to,selectedUsers',
+            'message' => 'required',
+            'subject' => 'required',
+            'start' => 'required',
+            'batch' => 'required',
+            'being_sent_to' => 'required',
+            'user' => 'required_if:being_sent_to,selectedUsers',
             'number_of_top_deposited_user' => 'required_if:being_sent_to,topDepositedUsers|integer|gte:0',
-            'number_of_days'               => 'required_if:being_sent_to,notLoginUsers|integer|gte:0',
+            'number_of_days' => 'required_if:being_sent_to,notLoginUsers|integer|gte:0',
         ], [
-            'number_of_days.required_if'               => "Number of days field is required",
+            'number_of_days.required_if' => "Number of days field is required",
             'number_of_top_deposited_user.required_if' => "Number of top deposited user field is required",
         ]);
 
-        if ($validator->fails()) return response()->json(['error' => $validator->errors()->all()]);
+        if ($validator->fails())
+            return response()->json(['error' => $validator->errors()->all()]);
 
         $scope = $request->being_sent_to;
         $users = User::oldest()->active()->$scope()->skip($request->start)->limit($request->batch)->get();
@@ -384,9 +391,9 @@ class ManageUsersController extends Controller
 
     public function notificationLog($id)
     {
-        $user      = User::findOrFail($id);
+        $user = User::findOrFail($id);
         $pageTitle = 'Notifications Sent to ' . $user->username;
-        $logs      = NotificationLog::where('user_id', $id)->with('user')->orderBy('id', 'desc')->paginate(getPaginate());
+        $logs = NotificationLog::where('user_id', $id)->with('user')->orderBy('id', 'desc')->paginate(getPaginate());
         return view('admin.reports.notification_history', compact('pageTitle', 'logs', 'user'));
     }
 
@@ -402,15 +409,15 @@ class ManageUsersController extends Controller
         $users = $query->orderBy('id', 'desc')->paginate(getPaginate());
         return response()->json([
             'success' => true,
-            'users'   => $users,
-            'more'    => $users->hasMorePages()
+            'users' => $users,
+            'more' => $users->hasMorePages()
         ]);
     }
 
-    
-    
-   
-    
+
+
+
+
 
 
 }

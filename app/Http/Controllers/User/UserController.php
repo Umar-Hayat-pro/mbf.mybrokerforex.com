@@ -47,10 +47,10 @@ class UserController extends Controller
         $formIb = FormIb::where('user_id', auth()->id())->first();
         if ($user->kv !== 1) {
             $notify[] = ['error', 'User is kyc unverified'];
-            return view($this->activeTemplate . 'user.dashboard', compact('pageTitle', 'user', 'pairs','widget', 'recentOrders', 'recentTransactions','formIb'))->withNotify($notify);
+            return view($this->activeTemplate . 'user.dashboard', compact('pageTitle', 'user', 'pairs', 'widget', 'recentOrders', 'recentTransactions', 'formIb'))->withNotify($notify);
 
         }
-        return view($this->activeTemplate . 'user.dashboard', compact('pageTitle', 'user', 'pairs',  'widget', 'recentOrders', 'recentTransactions','formIb'));
+        return view($this->activeTemplate . 'user.dashboard', compact('pageTitle', 'user', 'pairs', 'widget', 'recentOrders', 'recentTransactions', 'formIb'));
     }
     public function depositHistory(Request $request)
     {
@@ -388,7 +388,7 @@ class UserController extends Controller
         $mibBalance = Wallet::where('user_id', $user->id)->sum('balance');
         $ibAmount = $ibData->amount ?? 0;
 
-        return view($this->activeTemplate . 'user.becomeIB.Dashboard', compact('pageTitle', 'user', 'ibBalance', 'mibBalance', 'ibAmount'));
+        return view('templates.basic.user.becomeIB.Dashboard', compact('pageTitle', 'user', 'ibBalance', 'mibBalance', 'ibAmount'));
     }
 
     public function easyDeposit()
@@ -401,19 +401,19 @@ class UserController extends Controller
         $pageTitle = 'Easy Deposit';
 
         $accounts = DB::connection('mbf-dbmt5')
-        ->table('mt5_users')
-        ->where('Email', $user->email)
-        ->where(function ($query) {
-            $query->where('Group', 'like', '%real%')
-                  ->orWhere('Group', 'like', '%Real%');
-        })
-        ->get();
+            ->table('mt5_users')
+            ->where('Email', $user->email)
+            ->where(function ($query) {
+                $query->where('Group', 'like', '%real%')
+                    ->orWhere('Group', 'like', '%Real%');
+            })
+            ->get();
 
         $real = $accounts->filter(function ($account) {
             return stripos($account->Group, 'real') !== false;
         });
 
-        return view($this->activeTemplate . 'user.deposit.index', compact('pageTitle','gateways','withdrawMethods','real'));
+        return view($this->activeTemplate . 'user.deposit.index', compact('pageTitle', 'gateways', 'withdrawMethods', 'real'));
     }
 
     public function easyWithdraw()
@@ -423,7 +423,7 @@ class UserController extends Controller
         })->with('method:id,code,crypto')->get();
         $withdrawMethods = WithdrawMethod::active()->get();
         $pageTitle = 'Easy Withdraw';
-        return view($this->activeTemplate . 'user.withdraw.index', compact('pageTitle','gateways','withdrawMethods'));
+        return view($this->activeTemplate . 'user.withdraw.index', compact('pageTitle', 'gateways', 'withdrawMethods'));
     }
 
     public function walletOverview()
@@ -435,6 +435,6 @@ class UserController extends Controller
 
 
         $pageTitle = 'Wallet Overview';
-        return view($this->activeTemplate . 'user.wallet.index', compact('pageTitle','wallets','currencies','estimatedBalance'));
+        return view($this->activeTemplate . 'user.wallet.index', compact('pageTitle', 'wallets', 'currencies', 'estimatedBalance'));
     }
 }

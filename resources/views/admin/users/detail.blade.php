@@ -185,7 +185,7 @@
           <x-user-detail.account :user="$user" :accounts="$accounts" :countries="$countries" />
         </div>
         <div class="tab-pane fade" id="partner-tab-pane" role="tabpanel" aria-labelledby="partner-tab">
-          <x-user-detail.partner :user="$user" />
+          <x-user-detail.partner :user="$user" :ibaccount="$ib_accounts" />
         </div>
         <div class="tab-pane fade" id="transaction-tab-pane" role="tabpanel" aria-labelledby="transaction-tab">
           <x-user-detail.transaction :user="$user" />

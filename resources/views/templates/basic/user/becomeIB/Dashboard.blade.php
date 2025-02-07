@@ -22,7 +22,7 @@
                                     <a 
                                     {{-- href="{{ route('user.order.open') }}"  --}}
                                     class="dashboard-card__coin-name mb-0">
-                                        @lang('IB Balance')
+                                        @lang('MIB Balance')
                                     </a>
                                     <h6 class="dashboard-card__coin-title">
                                         {{ getAmount($ibBalance) }}
@@ -43,7 +43,7 @@
                                     <a 
                                     {{-- href="{{ route('user.order.completed') }}" --}}
                                      class="dashboard-card__coin-name mb-0">
-                                        @lang('IB Amount')
+                                        @lang('MIB Amount')
                                     </a>
                                     <h6 class="dashboard-card__coin-title">
                                         {{ getAmount($ibAmount) }}
@@ -79,14 +79,14 @@
                 <div class="row gy-4 mb-3 justify-content-start">
                     <div class="col-lg-12">
                         <div class="transection h-100">
-                            <h3 class="transection__title skeleton">@lang('Referral URL and Tree')</h3>
-                            <div class="mb-4">
-                                <label for="referralUrl" class="form-label">@lang('Your Referral URL')</label>
-                                <input type="text" class="form-control" id="referralUrl" readonly
-                                       {{-- value="{{ route('register', ['ref' => $user->username]) }}"  --}}
-                                       />
-                                <button type="button" class="btn btn-primary mt-2" onclick="copyReferralUrl()">
-                                    @lang('Copy URL')
+                            <h5 class="mb-2 ">@lang('Referral URL and Tree')</h5>
+                            <div class="copy-link p-3 mb-3 rounded-3" >
+                                <input type="text" class="col-lg-10 copyText p-3 border-0" 
+									   value="{{ route('home') }}?reference={{ $user->username }}" readonly>
+                                <button class="copy-link__button copyTextBtn" data-bs-toggle="tooltip"  data-bs-placement="right" 
+										title="@lang('Copy URL')">
+                                    <span class="copy-link__icon"><i class="las la-copy" style="font-size: 24px;"></i>
+                                    </span>
                                 </button>
                             </div>
 
@@ -95,42 +95,43 @@
                                 <div class="col-md-12">
                                     <div class="card">
                                         <div class="card-body">
-                                            <h4>@lang('You are referred by') <span class="text--base">{{ @$user->referrer->fullname }}</span></h4>
+                                            <h4>@lang('You are referred by') <span
+                                                    class="text--base">{{ @$user->referrer->fullname }}</span></h4>
                                         </div>
                                     </div>
                                 </div>
                             @endif
 
                             <div class="col-md-12">
-                                @if ($user->allReferrals->count() > 0 && $maxLevel > 0)
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h5 class="text-start">@lang('Users Referred By Me')</h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="treeview-container">
-                                                <ul class="treeview">
-                                                    <li class="items-expanded">{{ $user->fullname }} ({{ $user->username }})
-                                                        @include($activeTemplate . 'partials.under_tree', [
-                                                            'user'    => $user,
-                                                            'layer'   => 0,
-                                                            'isFirst' => true,
-                                                        ])
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @else
-                                    {{-- <div class="card">
-                                        <div class="card-body p-5">
-                                            <div class="empty-thumb text-center">
-                                                <img src="{{ asset('assets/images/extra_images/empty.png') }}" />
-                                                <p class="fs-14">@lang('No data found')</p>
-                                            </div>
-                                        </div>
-                                    </div> --}}
-                                @endif
+                                 @if ($user->allReferrals->count() > 0 && ($maxLevel ?? 0) > 0)
+									<div class="card">
+										<div class="card-header">
+											<h5 class="text-start">@lang('Users Referred By Me')</h5>
+										</div>
+										<div class="card-body">
+											<div class="treeview-container">
+												<ul class="treeview">
+													<li class="items-expanded">{{ $user->fullname }} ({{ $user->username }})
+														@include($activeTemplate . 'partials.under_tree', [
+															'user' => $user,
+															'layer' => 0,
+															'isFirst' => true,
+														])
+													</li>
+												</ul>
+											</div>
+										</div>
+									</div>
+								@else
+									<div class="card">
+										<div class="card-body p-5">
+											<div class="empty-thumb text-center">
+												<img src="{{ asset('assets/images/extra_images/empty.png') }}" />
+												<p class="fs-14">@lang('No data found')</p>
+											</div>
+										</div>
+									</div>
+								@endif
                             </div>
                         </div>
                     </div>
@@ -150,7 +151,7 @@
                             <h4 class="dashboard-card__coin-title text--base">
                               {{ getAmount($mibBalance) ?? 0 }}
                             </h4>
-                            <span class="mb-0 fs-18" style="color:black;">@lang('MIB Balance')</span>
+                            <span class="mb-0 fs-18" style="color:black;">@lang('Withdraw Earnings')</span>
                         </div>
                         {{-- <span class="toggle-dashboard-right dashboard--popup-close d-md-none"><i class="las la-times"></i></span> --}}
                     </div>
@@ -171,21 +172,35 @@
                             @endforeach --}}
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label class="fs-14 mb-1" style="color:black;">@lang('MT5 Account')</label>
+                        <select class="form-control" name="method">
+                            <option value="Select">Select</option>
+                            @if (!empty($real_acc))
+                                @foreach ($real_acc as $account)
+                                    <option value="{{ $account->Login }}">{{ $account->Login }}</option>
+                                @endforeach
+                            @else
+                                <option value="" disabled>No MT5 accounts found</option>
+                            @endif
+                        </select>
+                    </div>
                 </div>
             </div>
             {{-- Additional right sidebar content can go here --}}
         </div>
     </div>
-    
-    
-{{-- JavaScript to copy referral URL --}}
-{{-- <script>
-    function copyReferralUrl() {
-        const referralUrl = document.getElementById('referralUrl');
-        referralUrl.select();
-        referralUrl.setSelectionRange(0, 99999);
-        document.execCommand('copy');
-        alert("@lang('Referral URL copied to clipboard!')");
-    }
-</script> --}}
-@endsection
+
+
+    {{-- JavaScript to copy referral URL --}}
+    {{--
+    <script>
+        function copyReferralUrl() {
+            const referralUrl = document.getElementById('referralUrl');
+            referralUrl.select();
+            referralUrl.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            alert("@lang('Referral URL copied to clipboard!')");
+        }
+    </script> --}}
+    @endsection

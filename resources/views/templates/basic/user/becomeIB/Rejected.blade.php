@@ -24,7 +24,7 @@
           <h3>@lang('Partner Request Rejected')</h3>
 
           <!-- Description -->
-          <p class="mb-4">@lang('Your partnership request was rejected\'ll for some Reason for further information please contact our services team!')</p>
+          <p class="mb-4">@lang('Your partnership request was rejected for some Reason for further information please contact our services team!')</p>
 
           <!-- Support -->
           <div class="d-flex justify-content-center gap-3">
