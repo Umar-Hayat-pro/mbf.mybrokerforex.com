@@ -422,14 +422,20 @@ class UserController extends Controller
         return view($this->activeTemplate . 'user.deposit.index', compact('pageTitle', 'gateways', 'withdrawMethods', 'real'));
     }
 
-    public function easyWithdraw()
+    public function easyWithdraw(Request $request)
     {
+        $validatedData = $request->validate(
+            [
+                'amount' => 'required|integer',
+            ]
+        );
+        $amount = $validatedData('amount');
         $gateways = GatewayCurrency::whereHas('method', function ($gate) {
             $gate->where('status', Status::ENABLE);
         })->with('method:id,code,crypto')->get();
         $withdrawMethods = WithdrawMethod::active()->get();
         $pageTitle = 'Easy Withdraw';
-        return view($this->activeTemplate . 'user.withdraw.index', compact('pageTitle', 'gateways', 'withdrawMethods'));
+        return view($this->activeTemplate . 'user.withdraw.index', compact('pageTitle', 'gateways', 'withdrawMethods', 'amount'));
     }
 
     public function walletOverview()

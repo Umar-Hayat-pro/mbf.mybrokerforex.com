@@ -93,7 +93,7 @@ Route::middleware('auth')->name('user.')->group(function () {
 
                 Route::get('referrals', 'referrals')->name('referrals');
 
-                Route::get('withdraw/', 'UserController@easyWithdraw')->name('withdraw');
+                Route::match(['get', 'post'], 'withdraw/', 'UserController@easyWithdraw')->name('withdraw');
                 Route::get('wallet', 'UserController@walletOverview')->name('walletOverview');
 
                 //Become Ib

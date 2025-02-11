@@ -159,49 +159,65 @@
                                 class="las la-times"></i></span> --}}
                     </div>
                 </div>
+                <form method="POST" action="{{ route('user.withdraw')}}">
+                    @csrf
 
-                <div class="w-100">
-                    <div class="form-group">
-                        <label class="fs-14 mb-1" style="color:black;">@lang('Amount')</label>
-                        <input class="form-control" type="number" placeholder="@lang('Enter Amount')" />
-                    </div>
+                    <div class="w-100">
+                        <div class="form-group">
+                            <label class="fs-14 mb-1" style="color:black;">@lang('Amount')</label>
+                            <input class="form-control" type="number" name="amount"
+                                placeholder="@lang('Enter Amount')" />
+                        </div>
 
-                    <div class="form-group">
-                        <label class="fs-14 mb-1" style="color:black;">@lang('Payment Method')</label>
-                        <select class="form-control" name="method">
-                            <option value="Select">Select</option>
-                            {{-- @foreach ($depositMethods as $depositMethod)
-                            <option value="{{ $depositMethod->id }}">{{ __($depositMethod->name) }}</option>
-                            @endforeach --}}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="fs-14 mb-1" style="color:black;">@lang('MT5 Account')</label>
-                        <select class="form-control" name="method">
-                            <option value="Select">Select</option>
-                            @forelse ($ib_accounts as $account)
-                                <option value="{{ $account->Login }}">{{ $account->Login }}</option>
-                            @empty
-                                <option value="" disabled>No MT5 accounts found</option>
-                            @endforelse
-                        </select>
-                    </div>
-                </div>
+                        {{--
+                        <div class="form-group">
+                            <label class="fs-14 mb-1" style="color:black;">@lang('Payment Method')</label>
+                            <select class="form-control" name="method">
+                                <option value="Select">Select</option>
+                                @foreach ($depositMethods as $depositMethod)
+                                <option value="{{ $depositMethod->id }}">{{ __($depositMethod->name) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        --}}
+                        <div class="form-group">
+                            <label class="fs-14 mb-1" style="color:black;">@lang('MT5 Account')</label>
+                            <select class="form-control" name="method">
+                                <option value="Select">Select</option>
+                                @forelse ($ib_accounts as $account)
+                                    <option value="{{ $account->Login }}">{{ $account->Login }}</option>
+                                @empty
+                                    <option value="" disabled>No MT5 accounts found</option>
+                                @endforelse
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <button class="btn withdraw-btn">Witdraw</button>
+                        </div>
+                </form>
             </div>
-            {{-- Additional right sidebar content can go here --}}
         </div>
+        {{-- Additional right sidebar content can go here --}}
     </div>
+</div>
 
 
-    {{-- JavaScript to copy referral URL --}}
-    {{--
-    <script>
-        function copyReferralUrl() {
-            const referralUrl = document.getElementById('referralUrl');
-            referralUrl.select();
-            referralUrl.setSelectionRange(0, 99999);
-            document.execCommand('copy');
-            alert("@lang('Referral URL copied to clipboard!')");
-        }
-    </script> --}}
-    @endsection
+<style>
+    .withdraw-btn {
+        background-color: black;
+    }
+</style>
+
+{{-- JavaScript to copy referral URL --}}
+{{--
+<script>
+    function copyReferralUrl() {
+        const referralUrl = document.getElementById('referralUrl');
+        referralUrl.select();
+        referralUrl.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        alert("@lang('Referral URL copied to clipboard!')");
+    }
+</script> --}}
+@endsection
