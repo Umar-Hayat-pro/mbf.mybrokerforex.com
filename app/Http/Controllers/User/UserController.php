@@ -388,7 +388,13 @@ class UserController extends Controller
         $mibBalance = Wallet::where('user_id', $user->id)->sum('balance');
         $ibAmount = $ibData->amount ?? 0;
 
-        return view('templates.basic.user.becomeIB.Dashboard', compact('pageTitle', 'user', 'ibBalance', 'mibBalance', 'ibAmount'));
+        $ib_accounts = DB::connection('mbf-dbmt5')
+            ->table('mt5_users')
+            ->where('Email', $user->email)
+            ->where('Group', 'like', '%Multi-IB%')
+            ->get();
+
+        return view('templates.basic.user.becomeIB.Dashboard', compact('pageTitle', 'user', 'ibBalance', 'mibBalance', 'ibAmount', 'ib_accounts'));
     }
 
     public function easyDeposit()
