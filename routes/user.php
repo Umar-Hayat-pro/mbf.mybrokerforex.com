@@ -93,7 +93,7 @@ Route::middleware('auth')->name('user.')->group(function () {
 
                 Route::get('referrals', 'referrals')->name('referrals');
 
-                Route::get('withdraw', 'UserController@easyWithdraw')->name('withdraw');
+                Route::get('withdraw/', 'UserController@easyWithdraw')->name('withdraw');
                 Route::get('wallet', 'UserController@walletOverview')->name('walletOverview');
 
                 //Become Ib
@@ -113,16 +113,10 @@ Route::middleware('auth')->name('user.')->group(function () {
 
                 Route::get('/account-type', [AccountTypeController::class, 'newAccounts'])->name('account-type-index');
                 Route::get('/account-type/{id}', [AccountTypeController::class, 'accountView'])->name('account-view');
-                Route::get('/user-accounts', [AccountTypeController::class,'GetUserAccounts'])->name('user-accounts');
-				
+                Route::get('/user-accounts', [AccountTypeController::class, 'GetUserAccounts'])->name('user-accounts');
+
 
             });
-
-            // Route::get('/account-type', function(){
-            //     $pageTitle = "New Accounts";
-            //     return view('templates.basic.user.accounttype.index',compact('pageTitle'));
-            // })->name('account-type-index');
-
 
             Route::controller('OrderController')->group(function () {
                 Route::name('order.')->prefix('order')->group(function () {
