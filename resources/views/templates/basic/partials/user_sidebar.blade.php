@@ -67,6 +67,36 @@
                 </a>
             </li>
 
+			 <!-- Copy Trading Nav -->
+        
+        <li class="sidebar-menu-list__item">
+            <a href="javascript:void(0)" class="sidebar-menu-list__link {{ menuActive('user.copy-trading') }}">
+                <span class="icon"><span class="las la-clone"></span></span>
+                <span class="text">@lang('Copy Trading')</span>
+                <span class="arrow"><i class="fas fa-angle-down"></i></span> <!-- Dropdown arrow -->
+            </a>
+    <ul class="submenu">
+        <li class="submenu-item">
+            <a href="{{ route('user.copy-trading') }}" class="sidebar-menu-list__link {{ menuActive('user.copy-trading') }}">
+                    <span class="icon"><span class="las la-dot-circle"></span></span>
+                    <span class="text">@lang('Follower Access')</span>
+            </a>
+        </li>
+        <li class="submenu-item">
+            <a href="{{ route('user.follower-access') }}" class="sidebar-menu-list__link {{ menuActive('user.follower-access.follower-access') }}">
+                <span class="icon"><span class="las la-dot-circle"></span></span>
+                <span class="text">@lang('Provider Access')</span>
+            </a>
+        </li>
+        <li class="submenu-item">
+            <a href="{{ route('user.ratings') }}" class="sidebar-menu-list__link {{ menuActive('user.ratings.ratings') }}">
+                <span class="icon"><span class="las la-dot-circle"></span></span>
+                <span class="text">@lang('Ratings')</span>
+            </a>
+        </li>
+    </ul>
+</li>
+        <!-- copy trading nav ends -->
 
             {{-- This is Become IB --}}
 
@@ -190,3 +220,33 @@
         </ul>
     </div>
 </div>
+@push('script')
+    <script>
+        if ($('li').hasClass('active')) {
+            $('#sidebar__menuWrapper').animate({
+                scrollTop: eval($(".active").offset().top - 320)
+            }, 500);
+        }
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropdownItems = document.querySelectorAll('.sidebar-menu-list__item');
+
+        dropdownItems.forEach(item => {
+            item.addEventListener('click', function (e) {
+                // Prevent toggling if a submenu link is clicked
+                if (e.target.closest('.submenu-link')) return;
+
+                // Toggle active class
+                dropdownItems.forEach(otherItem => {
+                    if (otherItem !== item) {
+                        otherItem.classList.remove('active');
+                    }
+                });
+                item.classList.toggle('active');
+            });
+        });
+    });
+</script>
+@endpush
+

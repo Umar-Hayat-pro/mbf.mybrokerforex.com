@@ -2215,7 +2215,7 @@ input[type=number] {
 /* ================================= Form Css End =========================== */
 /* ================================= Modal Css Start =========================== */
 .custom--modal .modal-header {
-    border-bottom: 1px solid hsl(var(--white)/0.12);
+    border-bottom: 1px solid hsl(0deg 0% 89.61% / 88%);
     padding: 15px;
 }
 
@@ -2238,12 +2238,13 @@ input[type=number] {
 }
 
 .custom--modal .modal-content {
-    background-color: #09171a;
+    background-color: #ffffff;
     border-radius: 10px !important;
 }
 
 .custom--modal .modal-body {
     padding: 15px;
+	background: #f2f4f8;
 }
 
 .custom--modal .modal-icon i {
@@ -3304,7 +3305,7 @@ input[type=number] {
 }
 
 .dashboard-fluid .sidebar-menu-list__item.active>a {
-    background-color: hsl(var(--base)/0.19);
+    background-color: hsl(354.25deg 70.46% 53.53%);
     color: hsl(var(--white));
 }
 
@@ -4955,4 +4956,80 @@ span.input-group-text {
 
 .sidebar-menu__inner {
     background-image: linear-gradient(-225deg, #FFFEFF 0%, #f4f4f4 100%);
+}
+.embed-responsive {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+}
+
+.embed-responsive-16by9::before {
+    padding-top: 56.25%; /* 16:9 aspect ratio */
+}
+
+.embed-responsive-item {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+iframe {
+    border: 0;
+    width: 100% !important;
+    height: 54.5em !important;
+    
+}
+
+/* Dropdown arrow */
+.sidebar-menu-list__item .arrow {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+/* Rotate arrow when submenu is open */
+.sidebar-menu-list__item.active .arrow {
+    transform: rotate(180deg);
+}
+
+/* Submenu styling */
+.submenu {
+    display: none;
+    padding-left: 20px;
+    list-style: none;
+}
+
+/* Show submenu when parent item is active */
+.sidebar-menu-list__item.active .submenu {
+    display: block;
+}
+
+/* Submenu item styling */
+.submenu-item {
+    margin: 5px 0;
+}
+
+.submenu-link {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.submenu-link:hover {
+    background-color: #f8f9fa;
+}
+
+.submenu-link .icon {
+    margin-right: 10px;
+}
+span.text {
+    font-size: 13px !important;
 }

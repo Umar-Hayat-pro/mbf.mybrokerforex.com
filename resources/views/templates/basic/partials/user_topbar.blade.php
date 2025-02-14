@@ -12,7 +12,11 @@
                 </button>
             </div>
         </div>
+           
         <div class="dashboard-header__right">
+        <a href="https://web.mybrokerforex.com"target="_blank">
+            <img src="{{ asset('assets/images/extra_images/web.png') }}" width="40px">
+        </a>
             <a href="{{ route('trade') }}" target="_blank" class="btn btn--base outline btn--sm trade-btn">
                 <span class="icon-trade"></span> @lang('TRADE')
             </a>

@@ -78,7 +78,8 @@
                                             @endif
                                         </td>
                                         <td>
-                                            {{-- {{ route('admin.users.detail', $account->Login) }} --}}
+                                            {{-- {{ route('admin.users.detail', $account->Login) }} 
+											{{ route('admin.users.detail', $account->Email) }}--}}
                                             <div class="button--group">
                                                 <a href="#"
                                                     class="btn btn-sm btn-outline--primary">

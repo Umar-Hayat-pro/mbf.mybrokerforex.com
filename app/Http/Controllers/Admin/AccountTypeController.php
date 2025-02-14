@@ -420,7 +420,7 @@ class AccountTypeController extends Controller
         $group = $validatedData['groups'] ?? 'demo';
         $swapFree = isset($validatedData['swap_free']) ? filter_var($validatedData['swap_free'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : false;
 
-        if($status == 1){
+        if ($status == 1) {
             $status = 'RE';
         }
 
@@ -430,32 +430,34 @@ class AccountTypeController extends Controller
         // Prepare command
         $outputFile = storage_path('logs/account_create_output.txt');
 
-        $command = "C:\\AccountCreate\\bin\\Release\\net8.0\\publish\\AccountCreate.exe".
-        " " . escapeshellarg($name) .
-        " " . escapeshellarg($lastname) .
-        " " . escapeshellarg($group) .
-        " " . escapeshellarg($leverage) .
-        " " . escapeshellarg($email) .
-        " " . escapeshellarg($initialBalance) .
-        " " . escapeshellarg($country) .
-        " " . escapeshellarg($state) .
-        " " . escapeshellarg($city) .
-        " " . escapeshellarg($address) .
-        " " . escapeshellarg($zipcode) .
-        " " . escapeshellarg($company) .
-        " " . escapeshellarg($phone) .
-        " " . escapeshellarg($status) .
-        " " . $manager.
-        " " . $manager_pswd.
-        " " . $server_ip;
+        $command = "C:\\AccountCreate\\bin\\Release\\net8.0\\publish\\AccountCreate.exe" .
+            " " . escapeshellarg($name) .
+            " " . escapeshellarg($lastname) .
+            " " . escapeshellarg($group) .
+            " " . escapeshellarg($leverage) .
+            " " . escapeshellarg($email) .
+            " " . escapeshellarg($initialBalance) .
+            " " . escapeshellarg($country) .
+            " " . escapeshellarg($state) .
+            " " . escapeshellarg($city) .
+            " " . escapeshellarg($address) .
+            " " . escapeshellarg($zipcode) .
+            " " . escapeshellarg($company) .
+            " " . escapeshellarg($phone) .
+            " " . escapeshellarg($status) .
+            " " . $manager .
+            " " . $manager_pswd .
+            " " . $server_ip;
 
         //  <first name> <last name> <group> <leverage> <email> <initial balance> <country> <state> <city> <address> <zipcode> <company> <phone> <status> <manager ID> <manager password> <server ip>
 
         // Execute command
         $returnVar = 0;
-       
+
 
         exec($command, $output, $returnVar);
+
+        // dd($command, $output, $returnVar);
 
         // Check for errors
         if ($returnVar !== 0) {

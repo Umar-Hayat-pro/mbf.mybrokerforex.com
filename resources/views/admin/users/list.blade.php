@@ -80,7 +80,7 @@
 @endsection
 
 @push('breadcrumb-plugins')
-  <div class="card-footer">
+  <div class="card-footer2" style="background-color: #DC3545; padding: 0.5rem;">
     <a href="{{ url('users/export/') }}" class="title-btn me-2">Export Users</a>
   </div>
   <x-search-form placeholder="Username / Email" />

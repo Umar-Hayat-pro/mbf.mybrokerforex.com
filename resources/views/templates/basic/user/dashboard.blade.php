@@ -6,27 +6,45 @@
         @php
           $kycContent = getContent('kyc_content.content', true);
         @endphp
-        @if ($user->kv == Status::KYC_UNVERIFIED)
-          <div class="col-12">
-            <div class="alert alert--danger skeleton" role="alert">
-              <h5 class="alert-heading text--danger mb-2">@lang('KYC Verification Required')</h5>
-              <p class="mb-0">
-                {{ __(@$kycContent->data_values->unverified_content) }}
-                <a href="{{ route('user.kyc.form') }}" class="text--base">@lang('Click here to verify')</a>
-              </p>
-            </div>
-          </div>
-        @endif
-        @if ($user->kv == Status::KYC_PENDING)
-          <div class="col-12">
-            <div class="alert alert--warning flex-column justify-content-start align-items-start skeleton" role="alert">
-              <h5 class="alert-heading text--warning mb-2">@lang('KYC Verification Pending')</h5>
-              <p class="mb-0"> {{ __(@$kycContent->data_values->pending_content) }}
-                <a href="{{ route('user.kyc.data') }}" class="text--base">@lang('See KYC Data')</a>
-              </p>
-            </div>
-          </div>
-        @endif
+        @if ($user->kv == Status::KYC_UNVERIFIED && $user->kyc_rejection_reason)
+                    <div class="col-12">
+                        <div class="alert alert--danger skeleton" role="alert">
+                            <div class="flex-align justify-content-between">
+                                <h5 class="alert-heading text--danger mb-2">@lang('KYC Documents Rejected')</h5>
+                                <button data-bs-toggle="modal" data-bs-target="#kycRejectionReason">@lang('Show Reason')</button>
+                            </div>
+                            <p class="mb-0">
+                                {{ __(@$kycContent->data_values->rejection_content) }}
+                                <a href="{{ route('user.kyc.data') }}" class="text--base">@lang('See KYC Data')</a>
+                            </p>
+                        </div>
+                    </div>
+                @endif
+                @if ($user->kv == Status::KYC_UNVERIFIED)
+                  <div class="col-12">
+                      <div class="alert alert--danger skeleton" role="alert">
+                          <h5 class="alert-heading text--danger mb-2">@lang('KYC Verification Required')</h5>
+                          <p class="mb-0">
+                              {{ __(@$kycContent->data_values->unverified_content) }}
+                              @if ($user->kyc_rejection_reason)
+                                  <br>
+                                  <strong>@lang('Rejection Reason:')</strong> {{ $user->kyc_rejection_reason }}
+                              @endif
+                              <a href="{{ route('user.kyc.form') }}" class="text--base">@lang('Click here to verify')</a>
+                          </p>
+                      </div>
+                  </div>
+              @endif
+                @if ($user->kv == Status::KYC_PENDING)
+                    <div class="col-12">
+                        <div class="alert alert--warning flex-column justify-content-start align-items-start skeleton" role="alert">
+                            <h5 class="alert-heading text--warning mb-2">@lang('KYC Verification Pending')</h5>
+                            <p class="mb-0"> {{ __(@$kycContent->data_values->pending_content) }}
+                                <a href="{{ route('user.kyc.data') }}" class="text--base">@lang('See KYC Data')</a>
+                            </p>
+                        </div>
+                    </div>
+                @endif
         @if (!$user->ts)
           <div class="col-12">
             <div class="alert-item 2fa-notice skeleton">
@@ -117,7 +135,7 @@
                 <div class="transection__item skeleton">
                   <div class="d-flex flex-wrap align-items-center">
                     <div class="transection__date">
-                      <h6 class="transection__date-number text-white">
+                      <h6 class="transection__date-number text-black">
                         {{ showDateTime($recentOrder->created_at, 'd') }}
                       </h6>
                       <span class="transection__date-text">
@@ -156,7 +174,7 @@
                 <div class="transection__item skeleton">
                   <div class="d-flex flex-wrap align-items-center">
                     <div class="transection__date">
-                      <h6 class="transection__date-number text-white">
+                      <h6 class="transection__date-number text-black">
                         {{ showDateTime($recentTransaction->created_at, 'd') }}
                       </h6>
                       <span class="transection__date-text">
@@ -196,12 +214,28 @@
         </div>
       </div>
     </div>
-        
+    
+    @if ($user->kv == Status::KYC_UNVERIFIED && $user->kyc_rejection_reason)
+        <div class="modal fade custom--modal" id="kycRejectionReason">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header"><i class="fas fa-ban"></i>
+                        <h5 class="modal-title">@lang('KYC Document Rejection Reason')</h5>
+                        <span type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="las la-times"></i>
+                        </span>
+                    </div>
+                    <div class="modal-body text-center">
+                        <p>{{ auth()->user()->kyc_rejection_reason }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
 @endsection
 
 
 @push('topContent')
   <h4 class="mb-4">{{ __($pageTitle) }}</h4>
 @endpush
-
-

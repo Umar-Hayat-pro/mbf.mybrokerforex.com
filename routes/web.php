@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Frontend\UserController;
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\IbController;
+use App\Http\Controllers\CopyTradingController;
 
 Route::get('users/export/', 'App\Http\Controllers\UserController@export');
 Route::get('transaction/export/', 'App\Http\Controllers\TransactionController@export');
@@ -33,6 +34,13 @@ Route::controller('TicketController')->prefix('ticket')->name('ticket.')->group(
 });
 
 Route::get('app/deposit/confirm/{hash}', 'Gateway\PaymentController@appDepositConfirm')->name('deposit.app.confirm');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/copy-trading', [CopyTradingController::class, 'index'])->name('user.copy-trading');
+    Route::get('/follower-access', [CopyTradingController::class, 'followeraccess'])->name('user.follower-access');
+    Route::get('/provider-access', [CopyTradingController::class, 'provideraccess'])->name('user.provider-access');
+    Route::get('/ratings', [CopyTradingController::class, 'ratings'])->name('user.ratings');
+});
 
 Route::controller("TradeController")->prefix('trade')->group(function () {
     Route::get('/order/book/{symbol}', 'orderBook')->name('trade.order.book');

@@ -15,34 +15,46 @@ use App\Models\AdminNotification;
 use App\Models\Currency;
 use App\Models\Trade;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+
 
 class OrderController extends Controller
 {
 
     public function open()
     {
+        $user = auth()->user();
+
+        $openOrders = DB::connection('mbf-dbmt5')
+            ->table('mt5_users')
+            ->join('mt5_deals_2025', 'mt5_users.Login', '=', 'mt5_deals_2025.Login')
+            ->where('mt5_users.Email', $user->email)
+            ->select('mt5_deals_2025.*')
+            ->get();
+
+
         $pageTitle = "Open Order";
-        $orders    = $this->orderData('open');
-        return view($this->activeTemplate . 'user.order.list', compact('pageTitle', 'orders'));
+        $orders = $this->orderData('open');
+        return view($this->activeTemplate . 'user.order.list', compact('pageTitle', 'orders', 'openOrders'));
     }
 
     public function completed()
     {
         $pageTitle = "Completed Order";
-        $orders    = $this->orderData('completed');
+        $orders = $this->orderData('completed');
         return view($this->activeTemplate . 'user.order.list', compact('pageTitle', 'orders'));
     }
     public function canceled()
     {
         $pageTitle = "Canceled Order";
-        $orders    = $this->orderData('canceled');
+        $orders = $this->orderData('canceled');
         return view($this->activeTemplate . 'user.order.list', compact('pageTitle', 'orders'));
     }
 
     public function history()
     {
         $pageTitle = "My Order";
-        $orders    = $this->orderData();
+        $orders = $this->orderData();
         return view($this->activeTemplate . 'user.order.list', compact('pageTitle', 'orders'));
     }
 
@@ -59,7 +71,7 @@ class OrderController extends Controller
         }
         if (request()->currency) {
             $currency = Currency::active()->where('symbol', strtoupper(request()->currency))->firstOrFail();
-            $query    = currencyWiseOrderQuery($query, $currency);
+            $query = currencyWiseOrderQuery($query, $currency);
         }
         return $query->paginate(getPaginate());
     }
@@ -67,15 +79,15 @@ class OrderController extends Controller
     public function tradeHistory()
     {
         $pageTitle = "Trade History";
-        $trades    = Trade::where('trader_id', auth()->id())->filter(['trade_side'])->searchable(['order.pair:symbol', 'order.pair.coin:symbol', 'order.pair.market.currency:symbol'])->with('order.pair.coin', 'order.pair.market.currency')->orderBy('id', 'desc')->paginate(getPaginate());
+        $trades = Trade::where('trader_id', auth()->id())->filter(['trade_side'])->searchable(['order.pair:symbol', 'order.pair.coin:symbol', 'order.pair.market.currency:symbol'])->with('order.pair.coin', 'order.pair.market.currency')->orderBy('id', 'desc')->paginate(getPaginate());
         return view($this->activeTemplate . 'user.order.trade_history', compact('pageTitle', 'trades'));
     }
 
     public function save(Request $request, $symbol)
     {
         $validator = Validator::make($request->all(), [
-            'rate'       => 'required|numeric|gt:0',
-            'amount'     => 'required|numeric|gt:0',
+            'rate' => 'required|numeric|gt:0',
+            'amount' => 'required|numeric|gt:0',
             'order_side' => 'required|in:' . Status::BUY_SIDE_ORDER . ',' . Status::SELL_SIDE_ORDER . '',
             'order_type' => 'required|in:' . Status::ORDER_TYPE_LIMIT . ',' . Status::ORDER_TYPE_MARKET . '',
         ]);
@@ -86,17 +98,18 @@ class OrderController extends Controller
         }
         $pair = CoinPair::activeMarket()->activeCoin()->with('market.currency', 'coin', 'marketData')->where('symbol', $symbol)->first();
 
-        if (!$pair) return $this->response('Pair not found');
+        if (!$pair)
+            return $this->response('Pair not found');
 
-        $amount      = $request->amount;
-        $rate        = $request->order_type == Status::ORDER_TYPE_LIMIT ? $request->rate : $pair->marketData->price;
+        $amount = $request->amount;
+        $rate = $request->order_type == Status::ORDER_TYPE_LIMIT ? $request->rate : $pair->marketData->price;
         $totalAmount = $amount * $rate;
 
-        $coin           = $pair->coin;
+        $coin = $pair->coin;
         $marketCurrency = $pair->market->currency;
-        $user           = auth()->user();
+        $user = auth()->user();
 
-        if ($request->order_side ==  Status::BUY_SIDE_ORDER) {
+        if ($request->order_side == Status::BUY_SIDE_ORDER) {
 
             $userMarketCurrencyWallet = Wallet::where('user_id', $user->id)->where('currency_id', $marketCurrency->id)->spot()->first();
 
@@ -108,7 +121,7 @@ class OrderController extends Controller
                 return $this->response("Minimum buy amount " . showAmount($pair->minimum_buy_amount) . ' ' . $coin->symbol);
             }
 
-            if ($amount > $pair->maximum_buy_amount &&  $pair->maximum_buy_amount != -1) {  //-1 for unlimited maximum amount
+            if ($amount > $pair->maximum_buy_amount && $pair->maximum_buy_amount != -1) {  //-1 for unlimited maximum amount
                 return $this->response("Maximum buy amount " . showAmount($pair->maximum_buy_amount) . ' ' . $coin->symbol);
             }
 
@@ -120,7 +133,7 @@ class OrderController extends Controller
         }
 
 
-        if ($request->order_side ==  Status::SELL_SIDE_ORDER) {
+        if ($request->order_side == Status::SELL_SIDE_ORDER) {
             $userCoinWallet = Wallet::where('user_id', $user->id)->where('currency_id', $coin->id)->spot()->first();
 
             if (!$userCoinWallet) {
@@ -139,26 +152,26 @@ class OrderController extends Controller
             $orderSide = "Sell";
         }
 
-        $order                     = new Order();
-        $order->trx                = getTrx();
-        $order->user_id            = $user->id;
-        $order->pair_id            = $pair->id;
-        $order->order_side         = $request->order_side;
-        $order->order_type         = $request->order_type;
-        $order->rate               = $rate;
-        $order->amount             = $amount;
-        $order->price              = $pair->marketData->price;
-        $order->total              = $totalAmount;
-        $order->charge             = $charge;
-        $order->coin_id            = $coin->id;
+        $order = new Order();
+        $order->trx = getTrx();
+        $order->user_id = $user->id;
+        $order->pair_id = $pair->id;
+        $order->order_side = $request->order_side;
+        $order->order_type = $request->order_type;
+        $order->rate = $rate;
+        $order->amount = $amount;
+        $order->price = $pair->marketData->price;
+        $order->total = $totalAmount;
+        $order->charge = $charge;
+        $order->coin_id = $coin->id;
         $order->market_currency_id = $marketCurrency->id;
         $order->save();
 
-        if ($request->order_side ==  Status::BUY_SIDE_ORDER) {
-            $details       = "Open order for buy coin on " . $pair->symbol . " pair";
+        if ($request->order_side == Status::BUY_SIDE_ORDER) {
+            $details = "Open order for buy coin on " . $pair->symbol . " pair";
             $walletBalance = $this->createTrx($userMarketCurrencyWallet, 'order_buy', $totalAmount, $charge, $details, $user);
         } else {
-            $details       = "Open order for sell coin on " . $pair->symbol . " pair";
+            $details = "Open order for sell coin on " . $pair->symbol . " pair";
             $walletBalance = $this->createTrx($userCoinWallet, 'order_sell', $amount, 0, $details, $user);
         }
 
@@ -167,28 +180,28 @@ class OrderController extends Controller
         } catch (Exception $ex) {
         }
 
-        $adminNotification            = new AdminNotification();
-        $adminNotification->user_id   = $user->id;
-        $adminNotification->title     = $user->username . $details;
+        $adminNotification = new AdminNotification();
+        $adminNotification->user_id = $user->id;
+        $adminNotification->title = $user->username . $details;
         $adminNotification->click_url = urlPath('admin.order.history');
         $adminNotification->save();
 
         notify($user, 'ORDER_OPEN', [
-            'pair'                   => $pair->symbol,
-            'amount'                 => showAmount($order->amount),
-            'total'                  => showAmount($order->total),
-            'rate'                   => showAmount($order->rate),
-            'price'                  => showAmount($order->price),
-            'coin_symbol'            => @$coin->symbol,
-            'order_side'             => $orderSide,
+            'pair' => $pair->symbol,
+            'amount' => showAmount($order->amount),
+            'total' => showAmount($order->total),
+            'rate' => showAmount($order->rate),
+            'price' => showAmount($order->price),
+            'coin_symbol' => @$coin->symbol,
+            'order_side' => $orderSide,
             'market_currency_symbol' => @$marketCurrency->symbol,
-            'market'                 => $pair->market->name
+            'market' => $pair->market->name
         ]);
 
         $data = [
             'wallet_balance' => $walletBalance,
-            'order'          => $order,
-            'pair_symbol'    => $pair->symbol
+            'order' => $order,
+            'pair_symbol' => $pair->symbol
         ];
 
         return $this->response("Your order open successfully", true, $data);
@@ -199,51 +212,52 @@ class OrderController extends Controller
         return response()->json([
             'success' => $status,
             'message' => $message,
-            'data'    => $data
+            'data' => $data
         ]);
     }
 
     public function createTrx($wallet, $remark, $amount, $charge, $details, $user, $type = "-")
     {
         if ($type == '-') {
-            $wallet->balance  -= $amount;
+            $wallet->balance -= $amount;
         } else {
-            $wallet->balance  += $amount;
+            $wallet->balance += $amount;
         }
         $wallet->save();
 
-        $transaction               = new Transaction();
-        $transaction->user_id      = $user->id;
-        $transaction->wallet_id    = $wallet->id;
-        $transaction->amount       = $amount;
+        $transaction = new Transaction();
+        $transaction->user_id = $user->id;
+        $transaction->wallet_id = $wallet->id;
+        $transaction->amount = $amount;
         $transaction->post_balance = $wallet->balance;
-        $transaction->charge       = 0;
-        $transaction->trx_type     = $type;
-        $transaction->details      = $details;
-        $transaction->trx          = getTrx();
-        $transaction->remark       = $remark;
+        $transaction->charge = 0;
+        $transaction->trx_type = $type;
+        $transaction->details = $details;
+        $transaction->trx = getTrx();
+        $transaction->remark = $remark;
         $transaction->save();
 
-        if (getAmount($charge) <= 0)  return $wallet->balance;
+        if (getAmount($charge) <= 0)
+            return $wallet->balance;
 
         if ($type == '-') {
-            $wallet->balance  -= $charge;
+            $wallet->balance -= $charge;
         } else {
-            $wallet->balance  += $charge;
+            $wallet->balance += $charge;
         }
 
         $wallet->save();
 
-        $transaction               = new Transaction();
-        $transaction->user_id      = $user->id;
-        $transaction->wallet_id    = $wallet->id;
-        $transaction->amount       = $charge;
+        $transaction = new Transaction();
+        $transaction->user_id = $user->id;
+        $transaction->wallet_id = $wallet->id;
+        $transaction->amount = $charge;
         $transaction->post_balance = $wallet->balance;
-        $transaction->charge       = 0;
-        $transaction->trx_type     = $type;
-        $transaction->details      = "Charge for " . $details;
-        $transaction->trx          = getTrx();
-        $transaction->remark       = "charge_" . $remark;
+        $transaction->charge = 0;
+        $transaction->trx_type = $type;
+        $transaction->details = "Charge for " . $details;
+        $transaction->trx = getTrx();
+        $transaction->remark = "charge_" . $remark;
         $transaction->save();
 
         return $wallet->balance;
@@ -252,19 +266,19 @@ class OrderController extends Controller
     public function cancel($id)
     {
 
-        $user             = auth()->user();
-        $order            = Order::where('user_id', $user->id)->where('id', $id)->open()->with('pair', 'pair.coin', 'pair.market.currency')->firstOrFail();
-        $cancelAmount     = orderCancelAmount($order);
-        $amount           = $cancelAmount['amount'];
+        $user = auth()->user();
+        $order = Order::where('user_id', $user->id)->where('id', $id)->open()->with('pair', 'pair.coin', 'pair.market.currency')->firstOrFail();
+        $cancelAmount = orderCancelAmount($order);
+        $amount = $cancelAmount['amount'];
         $chargeBackAmount = $cancelAmount['charge_back_amount'];
 
         if ($order->order_side == Status::BUY_SIDE_ORDER) {
-            $symbol  = @$order->pair->market->currency->symbol;
-            $wallet  = Wallet::where('user_id', $user->id)->where('currency_id', $order->pair->market->currency->id)->spot()->first();
+            $symbol = @$order->pair->market->currency->symbol;
+            $wallet = Wallet::where('user_id', $user->id)->where('currency_id', $order->pair->market->currency->id)->spot()->first();
             $details = "Return $amount $symbol for order cancel";
         } else {
-            $symbol  = @$order->pair->coin->symbol;
-            $wallet  = Wallet::where('user_id', $user->id)->where('currency_id', $order->pair->coin->id)->spot()->first();
+            $symbol = @$order->pair->coin->symbol;
+            $wallet = Wallet::where('user_id', $user->id)->where('currency_id', $order->pair->coin->id)->spot()->first();
             $details = "Return $amount $symbol for order cancel";
         }
 
@@ -276,19 +290,19 @@ class OrderController extends Controller
         $order->status = Status::ORDER_CANCELED;
         $order->save();
 
-        $wallet->balance  += $amount;
+        $wallet->balance += $amount;
         $wallet->save();
 
-        $transaction               = new Transaction();
-        $transaction->user_id      = $user->id;
-        $transaction->wallet_id    = $wallet->id;
-        $transaction->amount       = $amount;
+        $transaction = new Transaction();
+        $transaction->user_id = $user->id;
+        $transaction->wallet_id = $wallet->id;
+        $transaction->amount = $amount;
         $transaction->post_balance = $wallet->balance;
-        $transaction->charge       = 0;
-        $transaction->trx_type     = '+';
-        $transaction->details      = $details;
-        $transaction->trx          = getTrx();
-        $transaction->remark       = 'order_canceled';
+        $transaction->charge = 0;
+        $transaction->trx_type = '+';
+        $transaction->details = $details;
+        $transaction->trx = getTrx();
+        $transaction->remark = 'order_canceled';
         $transaction->save();
 
         if ($chargeBackAmount > 0) {
@@ -296,22 +310,22 @@ class OrderController extends Controller
             $wallet->balance += $chargeBackAmount;
             $wallet->save();
 
-            $transaction               = new Transaction();
-            $transaction->user_id      = $user->id;
-            $transaction->wallet_id    = $wallet->id;
-            $transaction->amount       = $chargeBackAmount;
+            $transaction = new Transaction();
+            $transaction->user_id = $user->id;
+            $transaction->wallet_id = $wallet->id;
+            $transaction->amount = $chargeBackAmount;
             $transaction->post_balance = $wallet->balance;
-            $transaction->charge       = 0;
-            $transaction->trx_type     = '+';
-            $transaction->details      = "Charge back for " . $details;
-            $transaction->trx          = getTrx();
-            $transaction->remark       = 'order_canceled';
+            $transaction->charge = 0;
+            $transaction->trx_type = '+';
+            $transaction->details = "Charge back for " . $details;
+            $transaction->trx = getTrx();
+            $transaction->remark = 'order_canceled';
             $transaction->save();
         }
         notify($user, 'ORDER_CANCEL', [
-            'pair'                   => $order->pair->symbol,
-            'amount'                 => showAmount($order->amount),
-            'coin_symbol'            => @$order->pair->coin->symbol,
+            'pair' => $order->pair->symbol,
+            'amount' => showAmount($order->amount),
+            'coin_symbol' => @$order->pair->coin->symbol,
             'market_currency_symbol' => @$order->pair->market->currency->symbol,
         ]);
 
@@ -323,15 +337,15 @@ class OrderController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'update_filed' => 'required|in:rate,amount',
-            'amount'       => 'required_if:update_filed,amount|numeric|gt:0',
-            'rate'         => 'required_if:update_filed,rate|numeric|gt:0',
+            'amount' => 'required_if:update_filed,amount|numeric|gt:0',
+            'rate' => 'required_if:update_filed,rate|numeric|gt:0',
         ]);
 
         if ($validator->fails()) {
             return $this->response($validator->errors()->all());
         }
 
-        $user  = auth()->user();
+        $user = auth()->user();
         $order = Order::where('user_id', $user->id)->where('id', $id)->open()->whereHas('pair', function ($q) {
             $q->activeMarket()->activeCoin();
         })->with('pair', 'pair.coin', 'pair.market.currency')->open()->first();
@@ -360,32 +374,32 @@ class OrderController extends Controller
             return $this->response("Already filled amount" . showAmount($order->filled_amount));
         }
 
-        if ($order->order_side ==  Status::BUY_SIDE_ORDER) {
+        if ($order->order_side == Status::BUY_SIDE_ORDER) {
             $chargePercentage = $pair->percent_charge_for_buy;
-            $currency         = $pair->market->currency;
-            $minAmount        = $pair->minimum_buy_amount;
-            $maxAmount        = $pair->maximum_buy_amount;
-            $wallet           = Wallet::where('user_id', $user->id)->where('currency_id', $currency->id)->spot()->first();
-            $type             = "buy";
-            $oldCharge        = $order->charge;
+            $currency = $pair->market->currency;
+            $minAmount = $pair->minimum_buy_amount;
+            $maxAmount = $pair->maximum_buy_amount;
+            $wallet = Wallet::where('user_id', $user->id)->where('currency_id', $currency->id)->spot()->first();
+            $type = "buy";
+            $oldCharge = $order->charge;
         } else {
             $chargePercentage = $pair->percent_charge_for_sell;
-            $currency         = $pair->coin;
-            $minAmount        = $pair->minimum_sell_amount;
-            $maxAmount        = $pair->maximum_sell_amount;
-            $wallet           = Wallet::where('user_id', $user->id)->where('currency_id', $currency->id)->spot()->first();
-            $type             = "sell";
+            $currency = $pair->coin;
+            $minAmount = $pair->minimum_sell_amount;
+            $maxAmount = $pair->maximum_sell_amount;
+            $wallet = Wallet::where('user_id', $user->id)->where('currency_id', $currency->id)->spot()->first();
+            $type = "sell";
         }
 
         if ($request->amount > $order->amount) {
-            $updatedAmount  = $request->amount - $order->amount;
-            $orderAmount    = $order->amount + $updatedAmount;
-            $charge         = (($updatedAmount * $order->rate) / 100) * $chargePercentage;
+            $updatedAmount = $request->amount - $order->amount;
+            $orderAmount = $order->amount + $updatedAmount;
+            $charge = (($updatedAmount * $order->rate) / 100) * $chargePercentage;
             $order->charge += $charge;
         } else {
-            $updatedAmount  = $order->amount - $request->amount;
-            $orderAmount    = $order->amount - $updatedAmount;
-            $charge         = (($updatedAmount * $order->rate) / 100) * $chargePercentage;
+            $updatedAmount = $order->amount - $request->amount;
+            $orderAmount = $order->amount - $updatedAmount;
+            $charge = (($updatedAmount * $order->rate) / 100) * $chargePercentage;
             $order->charge -= $charge;
         }
 
@@ -395,7 +409,7 @@ class OrderController extends Controller
             return $this->response("Minimum $type amount " . showAmount($minAmount) . ' ' . $currency->symbol);
         }
 
-        if ($request->amount > $maxAmount &&  $maxAmount != -1) {
+        if ($request->amount > $maxAmount && $maxAmount != -1) {
             return $this->response("Maximum $type amount " . showAmount($maxAmount) . ' ' . $currency->symbol);
         }
 
@@ -406,17 +420,17 @@ class OrderController extends Controller
             }
         }
 
-        $totalAmount   = $orderAmount * $order->rate;
+        $totalAmount = $orderAmount * $order->rate;
         $order->amount = $orderAmount;
-        $order->total  = $totalAmount;
+        $order->total = $totalAmount;
         $order->save();
 
-        if ($order->order_side ==  Status::BUY_SIDE_ORDER) {
-            $details = "Update buy order on  " . $pair->symbol . " pair. updated amount is  " . showAMount($updatedAmount) .' ' .@$order->pair->coin->symbol;
+        if ($order->order_side == Status::BUY_SIDE_ORDER) {
+            $details = "Update buy order on  " . $pair->symbol . " pair. updated amount is  " . showAMount($updatedAmount) . ' ' . @$order->pair->coin->symbol;
             if ($request->amount > $oldOrderAmount) {
                 $this->createTrx($wallet, 'order_buy', ($updatedAmount * $order->rate), $charge, $details, $user);
             } else {
-                $chargePercent    = ($updatedAmount / $oldOrderAmount) * 100;
+                $chargePercent = ($updatedAmount / $oldOrderAmount) * 100;
                 $chargeBackAmount = ($oldCharge / 100) * $chargePercent;
                 $this->createTrx($wallet, 'order_buy', ($updatedAmount * $order->rate), $chargeBackAmount, $details, $user, '+');
             }
@@ -441,10 +455,10 @@ class OrderController extends Controller
         $oldTotal = $order->total;
         $newTotal = $request->rate * $order->amount;
 
-        if ($order->order_side ==  Status::SELL_SIDE_ORDER) {
-            $charge        = ($newTotal / 100) * $pair->percent_charge_for_sell;
-            $order->rate   = $request->rate;
-            $order->total  = $newTotal;
+        if ($order->order_side == Status::SELL_SIDE_ORDER) {
+            $charge = ($newTotal / 100) * $pair->percent_charge_for_sell;
+            $order->rate = $request->rate;
+            $order->total = $newTotal;
             $order->charge = $charge;
             $order->save();
 
@@ -453,33 +467,33 @@ class OrderController extends Controller
             ]);
         }
 
-        $marketCurrency           = $pair->market->currency;
+        $marketCurrency = $pair->market->currency;
         $userMarketCurrencyWallet = Wallet::where('user_id', $user->id)->where('currency_id', $marketCurrency->id)->spot()->first();
 
         if (!$userMarketCurrencyWallet) {
             return $this->response('Your market currency wallet not found');
         }
 
-        $charge  = $order->charge;
+        $charge = $order->charge;
         $details = 'update order rate on ' . $pair->symbol . ' pair. Rate ' . showAmount($order->rate) . ' to  ' . showAmount($request->rate) . '';
 
         if ($newTotal > $oldTotal) {
             $newAmount = $newTotal - $oldTotal;
             $newCharge = ($newAmount / 100) * $pair->percent_charge_for_buy;
-            $charge    = $charge + $newCharge;
-            $trxType   = "-";
+            $charge = $charge + $newCharge;
+            $trxType = "-";
             if (($newAmount + $newCharge) > $userMarketCurrencyWallet->balance) {
                 return $this->response('You don\'t have sufficient ' . $marketCurrency->symbol . ' wallet balance for buy coin.');
             }
         } else {
             $newAmount = $oldTotal - $newTotal;
             $newCharge = ($newAmount / 100) * $pair->percent_charge_for_buy;
-            $charge    = $charge - $newCharge;
-            $trxType   = "+";
+            $charge = $charge - $newCharge;
+            $trxType = "+";
         }
 
-        $order->rate   = $request->rate;
-        $order->total  = $newTotal;
+        $order->rate = $request->rate;
+        $order->total = $newTotal;
         $order->charge = $charge;
         $order->save();
 

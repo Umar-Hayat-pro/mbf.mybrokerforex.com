@@ -6855,7 +6855,7 @@ th.w-85 {
 /* login css start */
 
 .login-main {
-    padding: 100px 0;
+    padding: 70px 0;
     background-size: cover;
     background-repeat: no-repeat;
     min-height: 100vh;
@@ -6890,35 +6890,14 @@ th.w-85 {
     position: relative;
 }
 
-.login-area::after {
-    position: absolute;
-    content: '';
-    width: 247px;
-    height: 247px;
-    right: -80px;
-    top: -100px;
-    border: 40px solid rgba(52, 34, 229, 0.31);
-    box-sizing: border-box;
-    filter: blur(2px);
-    border-radius: 50%;
-    -webkit-border-radius: 50%;
-    -moz-border-radius: 50%;
-    -ms-border-radius: 50%;
-    -o-border-radius: 50%;
-}
-
 .login-wrapper {
     background-color: #00000078;
-    border-radius: 10px;
-    -webkit-border-radius: 10px;
-    -moz-border-radius: 10px;
-    -ms-border-radius: 10px;
-    -o-border-radius: 10px;
+    border-radius: 30px;
     overflow: hidden;
 }
 
 .login-wrapper__top {
-    padding: 60px 30px 40px 30px;
+    padding: 10px;
     text-align: center;
     background-color: #00000078;
     border-radius: 10px;
@@ -6936,17 +6915,7 @@ th.w-85 {
     }
 }
 
-.login-wrapper__top::after {
-    position: absolute;
-    content: '';
-    bottom: -25px;
-    left: 5px;
-    right: 5px;
-    z-index: -1;
-    border-width: 25px 256px 0px 256px;
-    border-style: solid;
-    border-color: #00000078 transparent transparent transparent;
-}
+
 
 @media (max-width: 1399px) {
     .login-wrapper__top::after {
@@ -6994,7 +6963,7 @@ th.w-85 {
 }
 
 .login-wrapper__body {
-    padding: 60px 40px 40px 40px;
+    padding: 10px 40px 40px 40px;
 }
 
 @media (max-width: 575px) {

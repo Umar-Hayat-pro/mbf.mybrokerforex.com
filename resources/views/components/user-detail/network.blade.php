@@ -17,7 +17,7 @@
             @endif
 
             {{-- Check if user has referrals and if the max level is greater than 0 --}}
-            @if ($user->allReferrals->count() > 1 && $maxLevel > 10)
+            @if ($user->allReferrals->count() > 0 && ($maxLevel ?? 0) > 0)
                         <div class="col-md-12">
                             <div class="card">
                                 <div class="card-header">
