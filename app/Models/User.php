@@ -21,7 +21,11 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token', 'ver_code', 'balance', 'kyc_data'
+        'password',
+        'remember_token',
+        'ver_code',
+        'balance',
+        'kyc_data'
     ];
 
     /**
@@ -48,7 +52,7 @@ class User extends Authenticatable
     }
     public function wallets()
     {
-        return $this->hasMany(Wallet::class,'user_id');
+        return $this->hasMany(Wallet::class, 'user_id');
     }
 
     public function deposits()
@@ -68,7 +72,7 @@ class User extends Authenticatable
     public function fullname(): Attribute
     {
         return new Attribute(
-            get: fn () => $this->firstname . ' ' . $this->lastname,
+            get: fn() => $this->firstname . ' ' . $this->lastname,
         );
     }
 
@@ -91,7 +95,7 @@ class User extends Authenticatable
     {
         return $this->referrals()->with('referrer');
     }
-    
+
     // SCOPES
     public function scopeActive($query)
     {
@@ -131,6 +135,11 @@ class User extends Authenticatable
     public function scopeMobileVerified($query)
     {
         return $query->where('sv', Status::VERIFIED);
+    }
+
+    public function scopeRequestPending($query)
+    {
+        return $query->where('profile_request', Status::REQUEST_PENDING);
     }
 
 

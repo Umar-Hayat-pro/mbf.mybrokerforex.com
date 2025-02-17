@@ -58,21 +58,29 @@
             class="form-control form--control2"
             name="{{ $data->label }}"
             @if($data->is_required == 'required') required @endif
-            accept="@foreach(explode(',',$data->extensions) as $ext) .{{ $ext }}, @endforeach"
+            accept="@foreach(explode(',', $data->extensions) as $ext) .{{ $ext }}, @endforeach"
             >
             <pre class="text--base mt-1">@lang('Supported formats'): {{ $data->extensions }}</pre>
         @endif
     </div>
 @endforeach
-            <div class="info">
-            <p>Upload a colour full-size (4 sides visible) photo of the document.</p>
-            <p>Do not upload selfies, screenshots and do not modify the images in graphic editors.</p></div>
-                        <br>
-                        
-                        <style>
-                            .info {
-                          background-color: #e7f3fe;
-                          border-left: 6px solid #2196F3;
-                          padding:5px;
-                        }
-                        </style>
+@if ($identifierValue === 'UserProfile')
+    <div class="info">
+        <p>You need to mention your name and the reason why you wish to change the details</p>
+    </div>
+    <br />
+@else
+    <div class="info">
+        <p>Upload a colour full-size (4 sides visible) photo of the document.</p>
+        <p>Do not upload selfies, screenshots and do not modify the images in graphic editors.</p>
+    </div>
+    <br>
+@endif
+
+<style>
+    .info {
+        background-color: #e7f3fe;
+        border-left: 6px solid #2196F3;
+        padding: 5px;
+    }
+</style>

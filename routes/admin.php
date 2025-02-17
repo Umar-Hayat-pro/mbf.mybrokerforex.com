@@ -102,6 +102,7 @@ Route::middleware('admin')->group(function () {
         Route::get('kyc-unverified', 'kycUnverifiedUsers')->name('kyc.unverified');
         Route::get('kyc-pending', 'kycPendingUsers')->name('kyc.pending');
         Route::get('mobile-verified', 'mobileVerifiedUsers')->name('mobile.verified');
+        Route::get('request-pending', 'requestPendingUsers')->name('request.pending');
 
         Route::get('detail/{id}', 'detail')->name('detail');
 
@@ -118,6 +119,9 @@ Route::middleware('admin')->group(function () {
         Route::get('send-notification', 'showNotificationAllForm')->name('notification.all');
         Route::post('send-notification', 'sendNotificationAll')->name('notification.all.send');
         Route::get('notification-log/{id}', 'notificationLog')->name('notification.log');
+        Route::get('request-data/{id}', 'RequestDetails')->name('request.data');
+        Route::post('request-approve/{id}', 'RequestApprove')->name('request.approve');
+        Route::post('request-reject/{id}', 'RequestReject')->name('request.reject');
     });
 
     // Subscriber
@@ -325,6 +329,13 @@ Route::middleware('admin')->group(function () {
         Route::get('kyc-setting', 'setting')->name('kyc.setting');
         Route::post('kyc-setting', 'settingUpdate');
     });
+
+    Route::controller('ProfileApproveController')->group(
+        function () {
+            Route::get('user-profile-settings', 'settings')->name('user.profile.settings');
+            Route::post('user-profile-settings', 'settingsUpdate');
+        }
+    );
 
     //Notification Setting
     Route::name('setting.notification.')->controller('NotificationController')->prefix('notification')->group(function () {

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\IbDataController;
 use App\Http\Controllers\Admin\AccountTypeController;
+use App\Http\Controllers\Admin\ProfileApproveController;
 
 Route::
         namespace('User\Auth')->name('user.')->group(function () {
@@ -96,27 +97,36 @@ Route::middleware('auth')->name('user.')->group(function () {
                 Route::match(['get', 'post'], 'withdraw/', 'UserController@easyWithdraw')->name('withdraw');
                 Route::get('wallet', 'UserController@walletOverview')->name('walletOverview');
 
-                //Become Ib
-                Route::get('be_ib', [IbDataController::class, 'formForUser'])->name('user_become_ib');
-
-                Route::get('/user.pending', function () {
-                    $pageTitle = 'IB Pending';
-                    return view('templates.basic.user.becomeIB.pending', compact('pageTitle'));
-                })->name('pending_user_ib');
-
-                Route::get('/ib_dashboard', 'UserController@ibDashboard')->name('ib_dashboard');
-
-                Route::get('/user.rejected', function () {
-                    $pageTitle = 'Form Request Rejected';
-                    return view('templates.basic.user.becomeIB.Rejected', compact('pageTitle'));
-                })->name('rejected_user_ib');
-
-                Route::get('/account-type', [AccountTypeController::class, 'newAccounts'])->name('account-type-index');
-                Route::get('/account-type/{id}', [AccountTypeController::class, 'accountView'])->name('account-view');
-                Route::get('/user-accounts', [AccountTypeController::class, 'GetUserAccounts'])->name('user-accounts');
-
+                // Routes for User Profile Change request this is the user side and admin.php has routes for admin side, for admin they are inside the ProfieApproveController and for user they are inside UserController.
+                Route::get('request-form', 'RequestForm')->name('request.form');
+                Route::get('request-data', 'RequestData')->name('request.data');
+                Route::post('request-submit', 'RequestSubmit')->name('request.submit');
 
             });
+
+            //Become Ib
+            Route::get('be_ib', [IbDataController::class, 'formForUser'])->name('user_become_ib');
+
+            Route::get('/user.pending', function () {
+                $pageTitle = 'IB Pending';
+                return view('templates.basic.user.becomeIB.pending', compact('pageTitle'));
+            })->name('pending_user_ib');
+
+            Route::get('/ib_dashboard', 'UserController@ibDashboard')->name('ib_dashboard');
+
+
+            Route::get('/user.rejected', function () {
+                $pageTitle = 'Form Request Rejected';
+                return view('templates.basic.user.becomeIB.Rejected', compact('pageTitle'));
+            })->name('rejected_user_ib');
+
+
+
+            Route::get('/account-type', [AccountTypeController::class, 'newAccounts'])->name('account-type-index');
+            Route::get('/account-type/{id}', [AccountTypeController::class, 'accountView'])->name('account-view');
+            Route::get('/user-accounts', [AccountTypeController::class, 'GetUserAccounts'])->name('user-accounts');
+
+
 
             Route::controller('OrderController')->group(function () {
                 Route::name('order.')->prefix('order')->group(function () {

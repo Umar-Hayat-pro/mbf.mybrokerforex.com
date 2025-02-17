@@ -449,4 +449,47 @@ class UserController extends Controller
         $pageTitle = 'Wallet Overview';
         return view($this->activeTemplate . 'user.wallet.index', compact('pageTitle', 'wallets', 'currencies', 'estimatedBalance'));
     }
+
+    // These are the method that are used when a user tries to change the user information such as Name,Email,Country
+    public function RequestForm()
+    {
+        if (auth()->user()->profile_request == 2) {
+            $notify[] = ['error', 'Your Request is under review'];
+            return to_route('user.home')->withNotify($notify);
+        }
+        if (auth()->user()->profile_request == 1) {
+            $notify[] = ['error', 'Your Request has been Approved'];
+            return to_route('user.home')->withNotify($notify);
+        }
+        $pageTitle = 'Profile Request Form';
+        $form = Form::where('act', 'UserProfile')->first();
+        return view($this->activeTemplate . 'user.update_profile.form', compact('pageTitle', 'form'));
+    }
+
+    public function RequestData()
+    {
+        $user = auth()->user();
+        $pageTitle = 'Request Data';
+        return view($this->activeTemplate . 'user.update_profile.info', compact('pageTitle', 'user'));
+    }
+
+
+    public function RequestSubmit(Request $request)
+    {
+        $form = Form::where('act', 'UserProfile')->first();
+        $formData = $form->form_data;
+        $formProcessor = new FormProcessor();
+        $validationRule = $formProcessor->valueValidation($formData);
+        $request->validate($validationRule);
+        $userData = $formProcessor->processFormData($request, $formData);
+        $user = auth()->user();
+        $user->profile_change_request = $userData;
+        $user->profile_request = 2;
+        $user->save();
+
+        $notify[] = ['success', 'Request submitted successfully'];
+        return to_route('user.home')->withNotify($notify);
+    }
+
+
 }
