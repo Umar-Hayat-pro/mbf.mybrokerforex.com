@@ -99,26 +99,26 @@
                 <!--    </div>-->
                 <!--</li>-->
                 <li class="sidebar-menu-item sidebar-dropdown">
-                   <a href="javascript:void(0)" class="{{ menuActive('admin.currency*', 3) }}">
-                       <i class="menu-icon las la-coins"></i>
-                       <span class="menu-title">@lang('Manage Currency')</span>
-                   </a>
-                   <div class="sidebar-submenu {{ menuActive('admin.currency*', 2) }} ">
-                       <ul>
-                           <li class="sidebar-menu-item {{ menuActive(['admin.currency.crypto']) }}">
-                               <a href="{{ route('admin.currency.crypto') }}" class="nav-link">
-                                   <i class="menu-icon las la-dot-circle"></i>
-                                   <span class="menu-title">@lang('Crypto Currency')</span>
-                               </a>
-                           </li>
-                           <li class="sidebar-menu-item {{ menuActive(['admin.currency.fiat']) }}">
-                               <a href="{{ route('admin.currency.fiat') }}" class="nav-link">
-                                   <i class="menu-icon las la-dot-circle"></i>
-                                   <span class="menu-title">@lang('Fiat Currency')</span>
-                               </a>
-                           </li>
-                       </ul>
-                   </div>
+                    <a href="javascript:void(0)" class="{{ menuActive('admin.currency*', 3) }}">
+                        <i class="menu-icon las la-coins"></i>
+                        <span class="menu-title">@lang('Manage Currency')</span>
+                    </a>
+                    <div class="sidebar-submenu {{ menuActive('admin.currency*', 2) }} ">
+                        <ul>
+                            <li class="sidebar-menu-item {{ menuActive(['admin.currency.crypto']) }}">
+                                <a href="{{ route('admin.currency.crypto') }}" class="nav-link">
+                                    <i class="menu-icon las la-dot-circle"></i>
+                                    <span class="menu-title">@lang('Crypto Currency')</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-menu-item {{ menuActive(['admin.currency.fiat']) }}">
+                                <a href="{{ route('admin.currency.fiat') }}" class="nav-link">
+                                    <i class="menu-icon las la-dot-circle"></i>
+                                    <span class="menu-title">@lang('Fiat Currency')</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </li>
                 <!--<li class="sidebar-menu-item {{ menuActive('admin.market.list') }}">-->
                 <!--    <a href="{{ route('admin.market.list') }}" class="nav-link ">-->
@@ -142,13 +142,15 @@
 
                         @if (
                             $bannedUsersCount > 0 ||
-                                $emailUnverifiedUsersCount > 0 ||
-                                $mobileUnverifiedUsersCount > 0 ||
-                                $kycUnverifiedUsersCount > 0 ||
-                                $kycPendingUsersCount > 0)
-                            <span class="menu-badge pill bg--danger ms-auto">
-                                <i class="fa fa-exclamation"></i>
-                            </span>
+                            $emailUnverifiedUsersCount > 0 ||
+                            $mobileUnverifiedUsersCount > 0 ||
+                            $kycUnverifiedUsersCount > 0 ||
+                            $kycPendingUsersCount > 0 ||
+                            $requestPendingUsersCount > 0
+                        )
+                                                    <span class="menu-badge pill bg--danger ms-auto">
+                                                        <i class="fa fa-exclamation"></i>
+                                                    </span>
                         @endif
                     </a>
                     <div class="sidebar-submenu {{ menuActive('admin.users*', 2) }} ">
@@ -164,8 +166,7 @@
                                     <i class="menu-icon las la-dot-circle"></i>
                                     <span class="menu-title">@lang('Banned Users')</span>
                                     @if ($bannedUsersCount)
-                                        <span
-                                            class="menu-badge pill bg--danger ms-auto">{{ $bannedUsersCount }}</span>
+                                        <span class="menu-badge pill bg--danger ms-auto">{{ $bannedUsersCount }}</span>
                                     @endif
                                 </a>
                             </li>
@@ -209,8 +210,17 @@
                                     <i class="menu-icon las la-dot-circle"></i>
                                     <span class="menu-title">@lang('KYC Pending')</span>
                                     @if ($kycPendingUsersCount)
+                                        <span class="menu-badge pill bg--danger ms-auto">{{ $kycPendingUsersCount }}</span>
+                                    @endif
+                                </a>
+                            </li>
+                            <li class="sidebar-menu-item {{ menuActive('admin.users.request.pending') }} ">
+                                <a href="{{ route('admin.users.request.pending') }}" class="nav-link">
+                                    <i class="menu-icon las la-dot-circle"></i>
+                                    <span class="menu-title">@lang('Profile Requests')</span>
+                                    @if ($requestPendingUsersCount)
                                         <span
-                                            class="menu-badge pill bg--danger ms-auto">{{ $kycPendingUsersCount }}</span>
+                                            class="menu-badge pill bg--danger ms-auto">{{ $requestPendingUsersCount }}</span>
                                     @endif
                                 </a>
                             </li>
@@ -337,8 +347,7 @@
                                     <i class="menu-icon las la-dot-circle"></i>
                                     <span class="menu-title">@lang('Pending Deposits')</span>
                                     @if ($pendingDepositsCount)
-                                        <span
-                                            class="menu-badge pill bg--danger ms-auto">{{ $pendingDepositsCount }}</span>
+                                        <span class="menu-badge pill bg--danger ms-auto">{{ $pendingDepositsCount }}</span>
                                     @endif
                                 </a>
                             </li>
@@ -400,8 +409,7 @@
                                     <span class="menu-title">@lang('Pending Withdrawals')</span>
 
                                     @if ($pendingWithdrawCount)
-                                        <span
-                                            class="menu-badge pill bg--danger ms-auto">{{ $pendingWithdrawCount }}</span>
+                                        <span class="menu-badge pill bg--danger ms-auto">{{ $pendingWithdrawCount }}</span>
                                     @endif
                                 </a>
                             </li>
@@ -448,8 +456,7 @@
                                     <i class="menu-icon las la-dot-circle"></i>
                                     <span class="menu-title">@lang('Pending Ticket')</span>
                                     @if ($pendingTicketCount)
-                                        <span
-                                            class="menu-badge pill bg--danger ms-auto">{{ $pendingTicketCount }}</span>
+                                        <span class="menu-badge pill bg--danger ms-auto">{{ $pendingTicketCount }}</span>
                                     @endif
                                 </a>
                             </li>
@@ -660,6 +667,16 @@
                         <i class="menu-icon las la-user-check"></i>
                         <span class="menu-title">@lang('KYC Setting')</span>
                     </a>
+                </li>
+
+                <li class="sidebar-menu-item {{ menuActive('admn.user.profile.settings') }}">
+                    <a class="nav-link" href="{{ route('admin.user.profile.settings') }}">
+                        <i class="menu-icon las la-user-check"></i>
+                        <span class="menu-title">
+                            @lang("User Profile Settings")
+                        </span>
+                    </a>
+
                 </li>
 
 

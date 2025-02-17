@@ -83,6 +83,13 @@ class ManageUsersController extends Controller
         return view('admin.users.list', compact('pageTitle', 'users'));
     }
 
+    public function requestPendingUsers()
+    {
+        $pageTitle = 'Request Pending Users';
+        $users = $this->userData('requestPending');
+        return view('admin.users.list', compact('pageTitle', 'users'));
+    }
+
     protected function userData($scope = null)
     {
         if ($scope) {
@@ -413,6 +420,45 @@ class ManageUsersController extends Controller
             'more' => $users->hasMorePages()
         ]);
     }
+
+
+    public function RequestDetails($id)
+    {
+        $pageTitle = "Profile Change Request";
+        $user = User::findOrFail($id);
+        return view('admin.users.request_detail', compact('pageTitle', 'user'));
+    }
+
+    public function RequestApprove($id)
+    {
+        $user = User::findOrFail($id);
+        $user->profile_request = 1;
+        $user->save();
+        notify($user, 'REQUEST_APPROVE', []);
+        $notify[] = ['success', 'Profile Request Approved'];
+        return to_route('admin.users.active')->withNotify($notify);
+    }
+
+    public function RequestReject(Request $request, $id)
+    {
+
+        $request->validate([
+            'reason' => 'required'
+        ]);
+
+        $user = User::findOrFail($id);
+        $user->profile_request = 0;
+        $user->profile_request_reason = $request->reason;
+        $user->save();
+
+        notify($user, 'REQUEST_REJECT', [
+            'reason' => $request->reason
+        ]);
+
+        $notify[] = ['success', 'Request Rejected Successfully'];
+        return to_route('admin.users.active')->withNotify($notify);
+    }
+
 
 
 
