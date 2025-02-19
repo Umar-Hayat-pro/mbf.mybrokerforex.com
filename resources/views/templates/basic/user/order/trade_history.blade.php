@@ -4,16 +4,17 @@
         <div class="col-lg-4">
             <h4 class="mb-0">{{ __($pageTitle) }}</h4>
         </div>
+        {{--
         <div class="col-lg-4">
             <form class="d-flex gap-2 flex-wrap">
                 <div class="flex-fill">
                     <select class="form-control form--control2 submit-form-on-change form-select" name="trade_side">
                         <option value="" selected disabled>@lang('Trade Side')</option>
                         <option value="">@lang('All')</option>
-                        <option value="{{ Status::BUY_SIDE_TRADE }}"
-                            @selected(request()->trade_side == Status::BUY_SIDE_TRADE)>@lang('Buy')</option>
-                        <option value="{{ Status::SELL_SIDE_TRADE }}"
-                            @selected(request()->trade_side == Status::SELL_SIDE_TRADE)>@lang('Sell')</option>
+                        <option value="{{ Status::BUY_SIDE_TRADE }}" @selected(request()->trade_side ==
+                            Status::BUY_SIDE_TRADE)>@lang('Buy')</option>
+                        <option value="{{ Status::SELL_SIDE_TRADE }}" @selected(request()->trade_side ==
+                            Status::SELL_SIDE_TRADE)>@lang('Sell')</option>
                     </select>
                 </div>
                 <div class="flex-fill">
@@ -27,6 +28,7 @@
                 </div>
             </form>
         </div>
+        --}}
         <div class="col-lg-12">
             <div class="table-wrapper">
                 <table class="table table--responsive--lg">
@@ -42,10 +44,6 @@
                             <th>@lang('Fee')</th>
                             <th>@lang('Profit')</th>
                             <th>@lang('Comment')</th>
-                            <!-- <th>@lang('Pair')</th> -->
-                            <!-- <th>@lang('Close Time')</th> -->
-                            <!-- <th>@lang('Close Price')</th> -->
-                            <!-- <th>@lang('Swap')</th> -->
                         </tr>
                     </thead>
                     <tbody>

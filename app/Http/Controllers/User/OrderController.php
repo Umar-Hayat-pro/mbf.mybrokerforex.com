@@ -28,8 +28,14 @@ class OrderController extends Controller
         $openOrders = DB::connection('mbf-dbmt5')
             ->table('mt5_users')
             ->join('mt5_deals_2025', 'mt5_users.Login', '=', 'mt5_deals_2025.Login')
+            ->join('mt5_orders_2025', function ($join) {
+                $join->on('mt5_users.Login', '=', 'mt5_orders_2025.Login')
+                    ->on('mt5_orders_2025.PositionID', '=', 'mt5_deals_2025.PositionID'); // Matching PositionID
+            })
             ->where('mt5_users.Email', $user->email)
-            ->select('mt5_deals_2025.*')
+            ->whereIn('mt5_orders_2025.State', [0, 1, 2, 3])
+            // Get them by State for open orders
+            ->select('mt5_deals_2025.*', 'mt5_orders_2025.*')
             ->get();
 
 
@@ -53,9 +59,23 @@ class OrderController extends Controller
 
     public function history()
     {
+        $user = auth()->user();
+
+        $openOrders = DB::connection('mbf-dbmt5')
+            ->table('mt5_users')
+            ->join('mt5_deals_2025', 'mt5_users.Login', '=', 'mt5_deals_2025.Login')
+            ->join('mt5_orders_2025', function ($join) {
+                $join->on('mt5_users.Login', '=', 'mt5_orders_2025.Login')
+                    ->on('mt5_orders_2025.PositionID', '=', 'mt5_deals_2025.PositionID');
+            })
+            ->where('mt5_users.Email', $user->email)
+            ->select('mt5_deals_2025.*', 'mt5_orders_2025.*')
+            ->get();
+
+
         $pageTitle = "My Order";
         $orders = $this->orderData();
-        return view($this->activeTemplate . 'user.order.list', compact('pageTitle', 'orders'));
+        return view($this->activeTemplate . 'user.order.list', compact('pageTitle', 'orders', 'openOrders'));
     }
 
     protected function orderData($scope = null)
@@ -86,8 +106,7 @@ class OrderController extends Controller
             ->where('mt5_users.Email', $user->email)
             ->select('mt5_deals_2025.*')
             ->paginate(getPaginate());
-        // ->get();
-        // $trades = Trade::where('trader_id', auth()->id())->filter(['trade_side'])->searchable(['order.pair:symbol', 'order.pair.coin:symbol', 'order.pair.market.currency:symbol'])->with('order.pair.coin', 'order.pair.market.currency')->orderBy('id', 'desc')->paginate(getPaginate());
+
         return view($this->activeTemplate . 'user.order.trade_history', compact('pageTitle', 'trades'));
     }
 
