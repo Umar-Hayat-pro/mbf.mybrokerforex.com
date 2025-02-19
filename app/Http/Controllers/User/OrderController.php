@@ -79,7 +79,15 @@ class OrderController extends Controller
     public function tradeHistory()
     {
         $pageTitle = "Trade History";
-        $trades = Trade::where('trader_id', auth()->id())->filter(['trade_side'])->searchable(['order.pair:symbol', 'order.pair.coin:symbol', 'order.pair.market.currency:symbol'])->with('order.pair.coin', 'order.pair.market.currency')->orderBy('id', 'desc')->paginate(getPaginate());
+        $user = auth()->user();
+        $trades = DB::connection('mbf-dbmt5')
+            ->table('mt5_users')
+            ->join('mt5_deals_2025', 'mt5_users.Login', '=', 'mt5_deals_2025.Login')
+            ->where('mt5_users.Email', $user->email)
+            ->select('mt5_deals_2025.*')
+            ->paginate(getPaginate());
+        // ->get();
+        // $trades = Trade::where('trader_id', auth()->id())->filter(['trade_side'])->searchable(['order.pair:symbol', 'order.pair.coin:symbol', 'order.pair.market.currency:symbol'])->with('order.pair.coin', 'order.pair.market.currency')->orderBy('id', 'desc')->paginate(getPaginate());
         return view($this->activeTemplate . 'user.order.trade_history', compact('pageTitle', 'trades'));
     }
 

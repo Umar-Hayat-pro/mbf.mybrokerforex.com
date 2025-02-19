@@ -447,7 +447,7 @@ class ManageUsersController extends Controller
         ]);
 
         $user = User::findOrFail($id);
-        $user->profile_request = 0;
+        $user->profile_request = 3;
         $user->profile_request_reason = $request->reason;
         $user->save();
 

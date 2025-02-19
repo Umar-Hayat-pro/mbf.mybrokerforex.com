@@ -342,14 +342,23 @@ class IbDataController extends Controller
             return redirect()->route('admin.form_ib')->withNotify($notify);
         }
 
-        // Validate the request
-        $validatedData = $request->validate([
-            'ib_status' => 'required|in:1,2', // Only validate IB status from form
-        ]);
+        // // Validate the request
+        // $validatedData = $request->validate([
+        //     'ib_status' => 'required|in:1,2', // Only validate IB status from form
+        // ]);
 
 
         $leverage = 100;
         $initialBalance = 0;
+
+        $country = $user->address->country;
+        $city = $user->address->city;
+        $state = $user->address->state;
+        $address = $user->address->address;
+        $zipcode = $user->address->zip;
+        $phone = $user->mobile;
+        $company = $user->company ?? 'None';
+        $initialBalance = $validatedData['initial_balance'] ?? 0;
 
 
         // Prepare data for account creation
@@ -357,7 +366,7 @@ class IbDataController extends Controller
 
 
         $command = "C:\\AccountCreate\\bin\\Release\\net8.0\\publish\\AccountCreate.exe" .
-            " " . escapeshellarg($user->first_name) .
+            " " . escapeshellarg($user->firstname) .
             " " . escapeshellarg($user->lastname) .
             " " . escapeshellarg($group) .
             " " . escapeshellarg($leverage) .
@@ -368,8 +377,8 @@ class IbDataController extends Controller
             " " . escapeshellarg($city ?? 'Nil') .
             " " . escapeshellarg($address ?? 'Nil') .
             " " . escapeshellarg($zipcode ?? 'Nil') .
-            " " . escapeshellarg($company ?? 'Nil') .
-            " " . escapeshellarg($user->phone) .
+            " " . escapeshellarg($company) .
+            " " . escapeshellarg($phone) .
             " " . escapeshellarg($status ?? 'RE') .
             " " . escapeshellarg($manager) .
             " " . escapeshellarg($manager_pswd) .
@@ -382,7 +391,7 @@ class IbDataController extends Controller
 
         exec($command, $output, $returnVar);
 
-
+        dd($command, $output, $returnVar);
 
         // Log output and handle errors
         file_put_contents($outputFile, implode("\n", $output));
