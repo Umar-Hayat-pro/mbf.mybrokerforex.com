@@ -95,12 +95,13 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
+                                            {{-- Explanation: Sending country_code and country to controller,   Showing Selected country based on the user->country_code and comparing it with the $key that is how we are showing that bug fixed. --}}
                                             <div class="form-group">
                                                 <label class="form-label">@lang('Country')</label>
                                                 @if($user->profile_request == Status::REQUEST_APPROVE)
                                                 <select name="country" class="form-control" required>
                                                     @foreach ($countries as $key => $country)
-                                                    <option data-mobile_code="{{ $country->dial_code }}" value="{{ $key }}" >
+                                                    <option data-mobile_code="{{ $country->dial_code }}" value="{{ $key }}"  {{ $user->country_code == $key ? 'selected' : '' }}>
                                                         {{ __($country->country) }}</option>
                                                     @endforeach
                                                 </select>

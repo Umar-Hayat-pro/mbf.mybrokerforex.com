@@ -202,7 +202,6 @@ class ManageUsersController extends Controller
         $user->ev = $request->ev ? Status::VERIFIED : Status::UNVERIFIED;
         $user->sv = $request->sv ? Status::VERIFIED : Status::UNVERIFIED;
         $user->ts = $request->ts ? Status::ENABLE : Status::DISABLE;
-        // $user->ib_status = $request->ib_status ? Status::IB_STATUS_APPROVED : Status::IB_STATUS_REJECTED;
         if (!$request->kv) {
             $user->kv = 0;
             if ($user->kyc_data) {
