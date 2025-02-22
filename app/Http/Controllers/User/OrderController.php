@@ -21,27 +21,50 @@ use Illuminate\Support\Facades\DB;
 class OrderController extends Controller
 {
 
-    public function open()
+    private function getUserLogins()
     {
         $user = auth()->user();
 
-        $openOrders = DB::connection('mbf-dbmt5')
+        return DB::connection('mbf-dbmt5')
             ->table('mt5_users')
             ->join('mt5_deals_2025', 'mt5_users.Login', '=', 'mt5_deals_2025.Login')
             ->join('mt5_orders_2025', function ($join) {
                 $join->on('mt5_users.Login', '=', 'mt5_orders_2025.Login')
-                    ->on('mt5_orders_2025.PositionID', '=', 'mt5_deals_2025.PositionID'); // Matching PositionID
+                    ->on('mt5_orders_2025.PositionID', '=', 'mt5_deals_2025.PositionID');
+            })
+            ->where('mt5_users.Email', $user->email)
+            ->whereIn('mt5_orders_2025.State', [0, 1, 2, 3, 4])
+            ->pluck('mt5_users.Login')
+            ->unique(); // Remove duplicates
+    }
+
+    public function open()
+    {
+        $user = auth()->user();
+        // Get unique Logins that have open orders
+        $userLogins = $this->getUserLogins();
+
+        // Fetch open orders
+        $query = DB::connection('mbf-dbmt5')
+            ->table('mt5_users')
+            ->join('mt5_deals_2025', 'mt5_users.Login', '=', 'mt5_deals_2025.Login')
+            ->join('mt5_orders_2025', function ($join) {
+                $join->on('mt5_users.Login', '=', 'mt5_orders_2025.Login')
+                    ->on('mt5_orders_2025.PositionID', '=', 'mt5_deals_2025.PositionID');
             })
             ->where('mt5_users.Email', $user->email)
             ->whereIn('mt5_orders_2025.State', [0, 1, 2, 3])
-            // Get them by State for open orders
-            ->select('mt5_deals_2025.*', 'mt5_orders_2025.*')
-            ->get();
+            ->select('mt5_deals_2025.*', 'mt5_orders_2025.*');
 
+        // Apply login filter **ONLY IF** a specific login is selected
+        if (request()->has('login') && request('login') !== 'all') {
+            $query->where('mt5_users.Login', request('login'));
+        }
 
+        $openOrders = $query->get();
         $pageTitle = "Open Order";
         $orders = $this->orderData('open');
-        return view($this->activeTemplate . 'user.order.list', compact('pageTitle', 'orders', 'openOrders'));
+        return view($this->activeTemplate . 'user.order.list', compact('pageTitle', 'orders', 'openOrders', 'userLogins'));
     }
 
     public function completed()
@@ -61,7 +84,9 @@ class OrderController extends Controller
     {
         $user = auth()->user();
 
-        $openOrders = DB::connection('mbf-dbmt5')
+        $userLogins = $this->getUserLogins();
+
+        $query = DB::connection('mbf-dbmt5')
             ->table('mt5_users')
             ->join('mt5_deals_2025', 'mt5_users.Login', '=', 'mt5_deals_2025.Login')
             ->join('mt5_orders_2025', function ($join) {
@@ -69,13 +94,18 @@ class OrderController extends Controller
                     ->on('mt5_orders_2025.PositionID', '=', 'mt5_deals_2025.PositionID');
             })
             ->where('mt5_users.Email', $user->email)
-            ->select('mt5_deals_2025.*', 'mt5_orders_2025.*')
-            ->get();
+            ->select('mt5_deals_2025.*', 'mt5_orders_2025.*');
 
+        // Apply login filter **ONLY IF** a specific login is selected
+        if (request()->has('login') && request('login') !== 'all') {
+            $query->where('mt5_users.Login', request('login'));
+        }
+
+        $openOrders = $query->get();
 
         $pageTitle = "My Order";
         $orders = $this->orderData();
-        return view($this->activeTemplate . 'user.order.list', compact('pageTitle', 'orders', 'openOrders'));
+        return view($this->activeTemplate . 'user.order.list', compact('pageTitle', 'orders', 'openOrders', 'userLogins'));
     }
 
     protected function orderData($scope = null)
@@ -100,14 +130,26 @@ class OrderController extends Controller
     {
         $pageTitle = "Trade History";
         $user = auth()->user();
-        $trades = DB::connection('mbf-dbmt5')
+        $userLogins = $this->getUserLogins();
+
+        $query = DB::connection('mbf-dbmt5')
             ->table('mt5_users')
             ->join('mt5_deals_2025', 'mt5_users.Login', '=', 'mt5_deals_2025.Login')
+            ->join('mt5_orders_2025', function ($join) {
+                $join->on('mt5_users.Login', '=', 'mt5_orders_2025.Login')
+                    ->on('mt5_orders_2025.PositionID', '=', 'mt5_deals_2025.PositionID');
+            })
             ->where('mt5_users.Email', $user->email)
-            ->select('mt5_deals_2025.*')
-            ->paginate(getPaginate());
+            ->select('mt5_deals_2025.*', 'mt5_orders_2025.*');
 
-        return view($this->activeTemplate . 'user.order.trade_history', compact('pageTitle', 'trades'));
+        // Apply login filter **ONLY IF** a specific login is selected
+        if (request()->has('login') && request('login') !== 'all') {
+            $query->where('mt5_users.Login', request('login'));
+        }
+
+        $trades = $query->get();
+
+        return view($this->activeTemplate . 'user.order.trade_history', compact('pageTitle', 'trades', 'userLogins'));
     }
 
     public function save(Request $request, $symbol)
