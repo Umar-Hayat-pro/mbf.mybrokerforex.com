@@ -9,7 +9,7 @@
             <td>{{ $order->PositionID}}</td>
             <td>{{ $order->PriceSL }}</td>
             <td>{{ $order->PriceTP }}</td>
-            <td>{{ $order->Volume }}</td>
+            <td>{{ number_format($order->Volume / 100000, 3) }} lot</td>
             <td>{{ $order->Order }}</td>
         </tr>
     @empty
