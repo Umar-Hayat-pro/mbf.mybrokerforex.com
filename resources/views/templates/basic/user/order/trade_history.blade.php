@@ -4,31 +4,18 @@
         <div class="col-lg-4">
             <h4 class="mb-0">{{ __($pageTitle) }}</h4>
         </div>
-        {{--
-        <div class="col-lg-4">
-            <form class="d-flex gap-2 flex-wrap">
-                <div class="flex-fill">
-                    <select class="form-control form--control2 submit-form-on-change form-select" name="trade_side">
-                        <option value="" selected disabled>@lang('Trade Side')</option>
-                        <option value="">@lang('All')</option>
-                        <option value="{{ Status::BUY_SIDE_TRADE }}" @selected(request()->trade_side ==
-                            Status::BUY_SIDE_TRADE)>@lang('Buy')</option>
-                        <option value="{{ Status::SELL_SIDE_TRADE }}" @selected(request()->trade_side ==
-                            Status::SELL_SIDE_TRADE)>@lang('Sell')</option>
-                    </select>
-                </div>
-                <div class="flex-fill">
-                    <div class="input-group">
-                        <input type="text" name="search" class="form-control form--control" value="{{ request()->search }}"
-                            placeholder="@lang('Pair,coin,currency...')">
-                        <button type="submit" class="input-group-text bg-primary text-white">
-                            <i class="las la-search"></i>
-                        </button>
-                    </div>
-                </div>
+        <div class="col-4">
+            <form method="GET" action="">
+                <select name="login" class="form-select" onchange="this.form.submit()">
+                    <option value="all" {{ request('login') == 'all' ? 'selected' : '' }}>All</option>
+                    @foreach($userLogins as $login)
+                        <option value="{{ $login }}" {{ request('login') == $login ? 'selected' : '' }}>
+                            {{ $login }}
+                        </option>
+                    @endforeach
+                </select>
             </form>
         </div>
-        --}}
         <div class="col-lg-12">
             <div class="table-wrapper">
                 <table class="table table--responsive--lg">

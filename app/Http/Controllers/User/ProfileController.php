@@ -52,12 +52,12 @@ class ProfileController extends Controller
         $user = auth()->user();
         $user->firstname = $request->firstname;
         $user->lastname = $request->lastname;
-        $user->mobile = $dialCode;
+        // $user->mobile = $dialCode;
         $user->country_code = $countryCode;
 
         // Update the address array with the new country value if profile request is approved
         if ($user->profile_request == Status::REQUEST_APPROVE) {
-            $user->mobile = $user->mobile . $dialCode;
+            $user->mobile = $dialCode . $user->mobile;
             $user->address = [
                 'address' => $request->address,
                 'state' => $request->state,
@@ -66,6 +66,7 @@ class ProfileController extends Controller
                 'city' => $request->city,
             ];
         } else {
+            $user->mobile = $dialCode . $user->mobile;
             $user->address = [
                 'address' => $request->address,
                 'state' => $request->state,
