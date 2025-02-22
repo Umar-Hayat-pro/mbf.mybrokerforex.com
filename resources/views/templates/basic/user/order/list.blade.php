@@ -9,49 +9,28 @@
                     <a href="{{ route('user.order.history') }}"
                         class="dashboard-header-menu__link   {{ menuActive('user.order.history')}}">@lang('History')</a>
                 </div>
-                {{--
-                <form class="d-flex gap-2 flex-wrap">
+                <form class="d-flex gap-2 flex-wrap" method="GET" action="{{ route('user.order.open') }}">
                     <div class="flex-fill">
                         <div class="input-group">
-                            <select name="order_type" class="form-control form--control2 submit-form-on-change form-select">
-                                <option value="" selected disabled>@lang('Order Type')</option>
+                            <select name="login" class="form-control form--control2 submit-form-on-change form-select">
+                                <option value="" {{ request()->login ? '' : 'selected' }}>@lang('Select Login')</option>
                                 <option value="">@lang('All')</option>
-                                <option value="{{ Status::ORDER_TYPE_LIMIT }}" @selected(request()->order_type ==
-                                    Status::ORDER_TYPE_LIMIT)>
-                                    @lang('Limit')
-                                </option>
-                                <option value="{{ Status::ORDER_TYPE_MARKET }}" @selected(request()->order_type ==
-                                    Status::ORDER_TYPE_MARKET)>
-                                    @lang('Market')
-                                </option>
+                                @foreach ($allLogins as $login)
+                                    <option value="{{ $login }}" {{ request()->login == $login ? 'selected' : '' }}>
+                                        {{ $login }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
-                    <div class="flex-fill">
-                        <select class="form-control form--control2 submit-form-on-change form-select" name="order_side">
-                            <option value="" selected disabled>@lang('Order Side')</option>
-                            <option value="">@lang('All')</option>
-                            <option value="{{ Status::BUY_SIDE_ORDER }}" @selected(request()->order_side ==
-                                Status::BUY_SIDE_ORDER)>
-                                @lang('Buy')
-                            </option>
-                            <option value="{{ Status::SELL_SIDE_ORDER }}" @selected(request()->order_side ==
-                                Status::SELL_SIDE_ORDER)>
-                                @lang('Sell')
-                            </option>
-                        </select>
-                    </div>
-                    <div class="flex-fill">
-                        <div class="input-group">
-                            <input type="text" name="search" class="form-control form--control"
-                                value="{{ request()->search }}" placeholder="@lang('Pair,coin,currency...')">
-                            <button type="submit" class="input-group-text bg--primary text-white">
-                                <i class="las la-search"></i>
-                            </button>
-                        </div>
+                    <div class="input-group">
+                        <button type="submit" class="input-group-text bg--primary text-white">
+                            <i class="las la-search"></i>
+                        </button>
                     </div>
                 </form>
-                --}}
+
+
             </div>
         </div>
         <div class="col-lg-12">
@@ -72,7 +51,6 @@
                             <th>@lang('PriceTP')</th>
                             <th>@lang('Volume')</th>
                             <th>@lang('Order')</th>
-                            <th>@lang('Status')</th>
                         </tr>
                     </thead>
                     @if (request()->routeIs('user.order.open'))
@@ -123,20 +101,20 @@
                 let action = "{{ route('user.order.update', ':id') }}";
 
                 let html = `<form class="order-update-form" action="${action.replace(':id', order.id)}">
-                                                                                                                                                                                <input type="hidden" name="update_filed" value="${updateField}">
-                                                                                                                                                                                <div class="input-group">
-                                                                                                                                                                                    <span class="input-group-text">
-                                                                                                                                                                                        ${updateField == 'amount' ? "@lang('Amount')" : "@lang('Rate')"}
-                                                                                                                                                                                    </span>
-                                                                                                                                                                                    <input type="text" class="form--control form-control" name="${updateField}"  value="${updateField == 'amount' ? getAmount(order.amount) : getAmount(order.rate)}">
-                                                                                                                                                                                    <button type="submit" class="input-group-text">
-                                                                                                                                                                                        <i class="fas fa-check text--success"></i>
-                                                                                                                                                                                    </button>
-                                                                                                                                                                                    <button type="button" class="input-group-text order-update-form-remove">
-                                                                                                                                                                                        <i class="fas fa-times text--danger"></i>
-                                                                                                                                                                                    </button>
-                                                                                                                                                                                </div>
-                                                                                                                                                                            </form>`;
+                                                                                                                                                                                                                <input type="hidden" name="update_filed" value="${updateField}">
+                                                                                                                                                                                                                <div class="input-group">
+                                                                                                                                                                                                                    <span class="input-group-text">
+                                                                                                                                                                                                                        ${updateField == 'amount' ? "@lang('Amount')" : "@lang('Rate')"}
+                                                                                                                                                                                                                    </span>
+                                                                                                                                                                                                                    <input type="text" class="form--control form-control" name="${updateField}"  value="${updateField == 'amount' ? getAmount(order.amount) : getAmount(order.rate)}">
+                                                                                                                                                                                                                    <button type="submit" class="input-group-text">
+                                                                                                                                                                                                                        <i class="fas fa-check text--success"></i>
+                                                                                                                                                                                                                    </button>
+                                                                                                                                                                                                                    <button type="button" class="input-group-text order-update-form-remove">
+                                                                                                                                                                                                                        <i class="fas fa-times text--danger"></i>
+                                                                                                                                                                                                                    </button>
+                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                            </form>`;
                 editColumn.find('.order--amount-rate-wrapper').append(html);
             });
 
