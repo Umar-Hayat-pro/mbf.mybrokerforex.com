@@ -191,7 +191,7 @@
         <x-user-detail.transaction :user="$user" />
       </div>
       <div class="tab-pane fade" id="referals-tab-pane" role="tabpanel" aria-labelledby="referals-tab">
-        <x-user-detail.referral :user='$user' />
+        <x-user-detail.referral :user='$user' :allUsers="$allUsers" :referrer="$referrer" />
       </div>
       <div class="tab-pane fade" id="network-tab-pane" role="tabpanel" aria-labelledby="network-tab">
         <x-user-detail.network :user='$user' />

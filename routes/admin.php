@@ -122,7 +122,10 @@ Route::middleware('admin')->group(function () {
         Route::get('request-data/{id}', 'RequestDetails')->name('request.data');
         Route::post('request-approve/{id}', 'RequestApprove')->name('request.approve');
         Route::post('request-reject/{id}', 'RequestReject')->name('request.reject');
+        Route::post('/referral-add/{id}', 'addDirectReferral')->name('referral.add');
     });
+
+
 
     // Subscriber
     Route::controller('SubscriberController')->prefix('subscriber')->name('subscriber.')->group(function () {

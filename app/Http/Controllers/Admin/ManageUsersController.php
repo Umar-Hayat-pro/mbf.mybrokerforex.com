@@ -103,6 +103,8 @@ class ManageUsersController extends Controller
 
     public function detail($id)
     {
+
+
         $user = User::with('wallets.currency')->findOrFail($id);
         $pageTitle = 'User Detail - ' . $user->username;
 
@@ -126,7 +128,42 @@ class ManageUsersController extends Controller
             ->where('Group', 'like', '%Multi-IB%')
             ->get();
 
-        return view('admin.users.detail', compact('pageTitle', 'user', 'widget', 'countries', 'accounts', 'currencies', 'ib_accounts'));
+        $allUsers = User::all();
+        // Fetch the user who referred the authenticated user
+        $referrer = User::where('id', $user->ref_by)->first();
+
+        return view('admin.users.detail', compact('pageTitle', 'user', 'widget', 'countries', 'accounts', 'currencies', 'ib_accounts', 'allUsers', 'referrer'));
+    }
+
+
+    public function addDirectReferral(Request $request, $id) // Add $id parameter
+    {
+        // Get the user to update (not the admin)
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'referral_user' => 'required|exists:users,id', // Ensure referral user exists
+        ]);
+
+        $referById = $request->referral_user;
+
+        // Prevent self-referral
+        if ($referById == $user->id) {
+            $notify[] = ['error', 'User cannot refer themselves'];
+            return back()->withNotify($notify);
+        }
+
+        // Check if user already has a referrer
+        if ($user->ref_by) {
+            $notify[] = ['error', 'Referral already exists for this user'];
+            return back()->withNotify($notify);
+        }
+
+        $user->ref_by = $referById;
+        $user->save();
+
+        $notify[] = ['success', 'Referral added successfully'];
+        return redirect()->back()->withNotify($notify);
     }
 
 
@@ -457,12 +494,4 @@ class ManageUsersController extends Controller
         $notify[] = ['success', 'Request Rejected Successfully'];
         return to_route('admin.users.active')->withNotify($notify);
     }
-
-
-
-
-
-
-
-
 }
