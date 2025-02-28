@@ -22,6 +22,8 @@ use App\Models\WithdrawMethod;
 use Illuminate\Http\Request;
 use Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
 
 class UserController extends Controller
 {
@@ -33,7 +35,58 @@ class UserController extends Controller
             ->select('id', 'market_id', 'coin_id')
             ->with('market:id,name,currency_id', 'coin:id,name,symbol', 'market.currency:id,name,symbol', 'marketData:id,pair_id,price,percent_change_1h,percent_change_24h,html_classes,market_cap')
             ->get();
+		
+		// Get raw account data first
+        $account = DB::connection('mbf-dbmt5')
+            ->table('mt5_users')
+            ->where('Email', $user->email)
+            ->where(function ($query) {
+                $query->where('Group', 'like', '%real%')
+                    ->orWhere('Group', 'like', '%Real%');
+            })
+            ->first();
 
+        // Log the actual column names
+        if ($account) {
+            \Log::info('MT5 Table Columns:', [
+                'columns' => array_keys((array)$account)
+            ]);
+        }
+
+        // Create trading account with default values
+        $tradingAccount = (object)[
+            'balance' => 0,
+            'equity' => 0,
+            'margin' => 0,
+            'freeMargin' => 0,
+            'marginLevel' => 0
+        ];
+
+        if ($account) {
+            // Get the actual column names from the account object
+            $columns = array_keys((array)$account);
+            
+            // Map the values based on what's available
+            foreach ($columns as $column) {
+                $columnLower = strtolower($column);
+                
+                if (strpos($columnLower, 'balance') !== false) {
+                    $tradingAccount->balance = $account->$column;
+                }
+                if (strpos($columnLower, 'equity') !== false) {
+                    $tradingAccount->equity = $account->$column;
+                }
+                if ($columnLower === 'margin') {
+                    $tradingAccount->margin = $account->$column;
+                }
+                if (strpos($columnLower, 'marginfree') !== false || strpos($columnLower, 'margin_free') !== false) {
+                    $tradingAccount->freeMargin = $account->$column;
+                }
+                if (strpos($columnLower, 'marginlevel') !== false || strpos($columnLower, 'margin_level') !== false) {
+                    $tradingAccount->marginLevel = $account->$column;
+                }
+            }
+        }
 
         $order = Order::where('user_id', $user->id);
         $widget['open_order'] = (clone $order)->open()->count();
@@ -491,5 +544,111 @@ class UserController extends Controller
         return to_route('user.home')->withNotify($notify);
     }
 
+	public function tradeHistory()
+    {
+        $pageTitle = 'Trade History';
+        $user = auth()->user();
+        
+        // Get user logins for the filter
+        $userLogins = DB::connection('mbf-dbmt5')
+            ->table('mt5_users')
+            ->where('Email', $user->email)
+            ->pluck('Login')
+            ->toArray();
 
+        // Get trades based on selected login
+        $selectedLogin = request('login', 'all');
+        $trades = Trade::where('trader_id', $user->id);
+        
+        if ($selectedLogin !== 'all') {
+            $trades = $trades->where('Login', $selectedLogin);
+        }
+        
+        $trades = $trades->with(['pair'])->orderBy('id', 'desc')->paginate(getPaginate());
+
+        // Get account data from mt5_accounts table
+        $mt5Account = DB::connection('mbf-dbmt5')
+            ->table('mt5_accounts')
+            ->when($selectedLogin !== 'all', function($query) use ($selectedLogin) {
+                return $query->where('Login', $selectedLogin);
+            })
+            ->when($selectedLogin === 'all', function($query) use ($userLogins) {
+                return $query->whereIn('Login', $userLogins);
+            })
+            ->first();
+
+        // Create trading account object with direct column mapping
+        $tradingAccount = (object)[
+            'balance' => $mt5Account->Balance ?? 0,
+            'equity' => $mt5Account->Equity ?? 0,
+			'credit' => $mt5Account->Credit ?? 0,
+            'margin' => $mt5Account->Margin ?? 0,
+            'freeMargin' => $mt5Account->MarginFree ?? 0,
+            'marginLevel' => $mt5Account->MarginLevel ?? 0
+        ];
+
+        return view($this->activeTemplate . 'user.order.trade_history', compact(
+            'pageTitle',
+            'trades',
+            'tradingAccount',
+            'userLogins'
+        ));
+    }
+	
+	public function openOrders()
+    {
+        $pageTitle = 'Open Orders';
+        $user = auth()->user();
+        
+        // Get user logins for the filter
+        $userLogins = DB::connection('mbf-dbmt5')
+            ->table('mt5_users')
+            ->where('Email', $user->email)
+            ->pluck('Login')
+            ->toArray();
+
+        // Get trades based on selected login
+        $selectedLogin = request('login', 'all');
+        
+        // Get open orders
+        $openOrders = DB::connection('mbf-dbmt5')
+            ->table('mt5_trades')
+            ->whereIn('Login', $userLogins)
+            ->where('Action', 'like', '%pending%')
+            ->when($selectedLogin !== 'all', function($query) use ($selectedLogin) {
+                return $query->where('Login', $selectedLogin);
+            })
+            ->orderBy('Time', 'DESC')
+            ->get();
+
+        // Get account data from mt5_accounts table
+        $mt5Account = DB::connection('mbf-dbmt5')
+            ->table('mt5_accounts')
+            ->when($selectedLogin !== 'all', function($query) use ($selectedLogin) {
+                return $query->where('Login', $selectedLogin);
+            })
+            ->when($selectedLogin === 'all', function($query) use ($userLogins) {
+                return $query->whereIn('Login', $userLogins);
+            })
+            ->first();
+
+        // Create trading account object with direct column mapping
+        $tradingAccount = (object)[
+            'balance' => $mt5Account->Balance ?? 0,
+            'equity' => $mt5Account->Equity ?? 0,
+            'credit' => $mt5Account->Credit ?? 0,
+            'margin' => $mt5Account->Margin ?? 0,
+            'freeMargin' => $mt5Account->MarginFree ?? 0,
+            'marginLevel' => $mt5Account->MarginLevel ?? 0
+        ];
+
+        return view($this->activeTemplate . 'user.order.list', compact(
+            'pageTitle',
+            'openOrders',
+            'tradingAccount',
+            'userLogins'
+        ));
+    }
+	
+	
 }
