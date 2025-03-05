@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AccountTypeControllerModal;
+use App\Models\UserAccounts;
 use Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -410,7 +411,8 @@ class AccountTypeController extends Controller
         $city = $user->address->city;
         $state = $user->address->state;
         $address = $user->address->address;
-        $status = $user->kv; // O is unverified, 1 is verified, 2 is pending .. Since user is making this form he is verified so send 1.
+        $status = $user->kv;
+        $password = $validatedData['password'];
         $zipcode = $user->address->zip;
         $phone = $user->mobile;
         $company = $user->company ?? 'None';
@@ -418,7 +420,13 @@ class AccountTypeController extends Controller
         $leverage = $validatedData['leverage'];
         $initialBalance = $validatedData['initial_balance'] ?? 0;
         $group = $validatedData['groups'] ?? 'demo';
-        $swapFree = isset($validatedData['swap_free']) ? filter_var($validatedData['swap_free'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : false;
+        $swapFree = isset($validatedData['swap_free'])
+            ?
+            filter_var(
+                $validatedData['swap_free'],
+                FILTER_VALIDATE_BOOLEAN,
+                FILTER_NULL_ON_FAILURE
+            ) : false;
 
         if ($status == 1) {
             $status = 'RE';
@@ -436,6 +444,7 @@ class AccountTypeController extends Controller
             " " . escapeshellarg($group) .
             " " . escapeshellarg($leverage) .
             " " . escapeshellarg($email) .
+            " " . escapeshellarg($password) .
             " " . escapeshellarg($initialBalance) .
             " " . escapeshellarg($country) .
             " " . escapeshellarg($state) .
@@ -455,16 +464,31 @@ class AccountTypeController extends Controller
         $returnVar = 0;
 
 
+
         exec($command, $output, $returnVar);
 
-        // dd($command, $output, $returnVar);
+
 
         // Check for errors
         if ($returnVar !== 0) {
-            $errorMessage = "Failed to create account. Please try again.";
-            session()->flash('error', $errorMessage);
-            return redirect()->route('user.user-accounts');
+            $notify[] = ['error', 'Failed to create account. Please try again.'];
+            return redirect()->route('user.user-accounts')->withNotfiy($notify);
         }
+
+        // Extract the account number and master passsword
+        $accountData = explode(' - ', trim($output[0] ?? ''));
+        if (count($accountData) !== 2) {
+            $notify[] = ['error', 'An Error has occured while trying to make the account, please try again later'];
+            return redirect()->route('user.user-accounts')->withNotify($notify);
+        }
+
+        $accountNumber = trim($accountData[0]);
+        $masterPassword = trim($accountData[1]);
+        $userAccount = new UserAccounts();
+        $userAccount->User_Id = $user->id;
+        $userAccount->Account = $accountNumber;
+        $userAccount->Master_Password = $masterPassword;
+        $userAccount->save();
 
         // Log output for debugging
         file_put_contents($outputFile, implode("\n", $output));

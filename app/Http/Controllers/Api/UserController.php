@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use App\Models\Trade;
 
 class UserController extends Controller
 {
@@ -552,6 +553,75 @@ class UserController extends Controller
             'message' => ['success' => ['Provided password is correct']]
         ]);
 
+    }
+	
+	public function getTradeHistory()
+    {
+        $user = auth()->user();
+        $trades = Trade::where('trader_id', $user->id)->with(['pair'])->orderBy('id', 'desc')->paginate(getPaginate());
+
+        // Add MT5 account data
+        $mt5Account = DB::connection('mbf-dbmt5')
+            ->table('mt5_users')
+            ->where('Email', $user->email)
+            ->where(function ($query) {
+                $query->where('Group', 'like', '%real%')
+                    ->orWhere('Group', 'like', '%Real%');
+            })
+            ->first();
+
+        $tradingAccount = [
+            'balance' => $mt5Account->balance ?? 0,
+            'equity' => $mt5Account->equity ?? 0,
+            'margin' => $mt5Account->margin ?? 0,
+            'freeMargin' => $mt5Account->margin_free ?? 0,
+            'marginLevel' => $mt5Account->margin_level ?? 0
+        ];
+
+        return response()->json([
+            'trades' => $trades,
+            'tradingAccount' => $tradingAccount
+        ]);
+    }
+
+    public function getAccountData()
+    {
+        $user = auth()->user();
+        $selectedLogin = request('login', 'all');
+
+        // Get user logins first
+        $userLogins = DB::connection('mbf-dbmt5')
+            ->table('mt5_users')
+            ->where('Email', $user->email)
+            ->pluck('Login')
+            ->toArray();
+
+        // Get account data from mt5_accounts table
+        $mt5Account = DB::connection('mbf-dbmt5')
+            ->table('mt5_accounts')
+            ->when($selectedLogin !== 'all', function($query) use ($selectedLogin) {
+                return $query->where('Login', $selectedLogin);
+            })
+            ->when($selectedLogin === 'all', function($query) use ($userLogins) {
+                return $query->whereIn('Login', $userLogins);
+            })
+            ->first();
+
+        // Debug log
+        \Log::info('API Account Data:', [
+            'user_email' => $user->email,
+            'selected_login' => $selectedLogin,
+            'user_logins' => $userLogins,
+            'account_data' => $mt5Account
+        ]);
+
+        return response()->json([
+            'balance' => $mt5Account->Balance ?? 0,
+            'equity' => $mt5Account->Equity ?? 0,
+            'margin' => $mt5Account->Margin ?? 0,
+            'freeMargin' => $mt5Account->MarginFree ?? 0,
+            'marginLevel' => $mt5Account->MarginLevel ?? 0
+        ]);
     }
 
 }
