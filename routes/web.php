@@ -5,6 +5,7 @@ use App\Http\Controllers\Frontend\UserController;
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\IbController;
 use App\Http\Controllers\CopyTradingController;
+use App\Http\Controllers\Api\UserController as ApiUserController;
 
 Route::get('users/export/', 'App\Http\Controllers\UserController@export');
 Route::get('transaction/export/', 'App\Http\Controllers\TransactionController@export');
@@ -58,6 +59,8 @@ Route::namespace('P2P')->group(function () {
     });
 });
 
+
+
 Route::controller('SiteController')->group(function () {
     Route::get('/contact', 'contact')->name('contact');
     Route::get('/pwa/configuration', 'pwaConfiguration')->name('pwa.configuration');
@@ -81,6 +84,8 @@ Route::controller('SiteController')->group(function () {
     Route::get('/', 'index')->name('home');
     
 });
+
+Route::get('user/account-data', [ApiUserController::class, 'getAccountData'])->name('user.account.data');
 
 
 
