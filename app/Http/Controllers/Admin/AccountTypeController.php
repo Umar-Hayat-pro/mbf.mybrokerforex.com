@@ -412,7 +412,6 @@ class AccountTypeController extends Controller
         $state = $user->address->state;
         $address = $user->address->address;
         $status = $user->kv;
-        $password = $validatedData['password'];
         $zipcode = $user->address->zip;
         $phone = $user->mobile;
         $company = $user->company ?? 'None';
@@ -444,7 +443,6 @@ class AccountTypeController extends Controller
             " " . escapeshellarg($group) .
             " " . escapeshellarg($leverage) .
             " " . escapeshellarg($email) .
-            " " . escapeshellarg($password) .
             " " . escapeshellarg($initialBalance) .
             " " . escapeshellarg($country) .
             " " . escapeshellarg($state) .
@@ -469,6 +467,8 @@ class AccountTypeController extends Controller
 
 
 
+
+
         // Check for errors
         if ($returnVar !== 0) {
             $notify[] = ['error', 'Failed to create account. Please try again.'];
@@ -477,6 +477,8 @@ class AccountTypeController extends Controller
 
         // Extract the account number and master passsword
         $accountData = explode(' - ', trim($output[0] ?? ''));
+
+
         if (count($accountData) !== 2) {
             $notify[] = ['error', 'An Error has occured while trying to make the account, please try again later'];
             return redirect()->route('user.user-accounts')->withNotify($notify);
