@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Rules\FileTypeValidate;
 use Illuminate\Support\Facades\DB;
+use App\Services\AccountService;
 
 class ManageUsersController extends Controller
 {
@@ -108,31 +109,23 @@ class ManageUsersController extends Controller
         $user = User::with('wallets.currency')->findOrFail($id);
         $pageTitle = 'User Detail - ' . $user->username;
 
-        $widget = [];
-        $widget['total_trade'] = Trade::where('trader_id', $user->id)->count();
-        $widget['total_order'] = Trade::where('order_id', $user->id)->count();
-        $widget['total_deposit'] = Deposit::where('user_id', $user->id)->where('status', Status::PAYMENT_SUCCESS)->count();
-        $widget['total_transaction'] = Transaction::where('user_id', $user->id)->count();
+        $widget = $user->getWidgetStats();
 
         $countries = json_decode(file_get_contents(resource_path('views/partials/country.json')));
         $currencies = Currency::active()->get();
 
-        $accounts = DB::connection('mbf-dbmt5')
-            ->table('mt5_users')
-            ->where('Email', $user->email)
-            ->get();
+        $accounts = (new AccountService())->getUserAccounts($user->email);
+        $ib_accounts = (new AccountService())->getIBAccounts($user->email);
 
-        $ib_accounts = DB::connection('mbf-dbmt5')
-            ->table('mt5_users')
-            ->where('Email', $user->email)
-            ->where('Group', 'like', '%Multi-IB%')
-            ->get();
 
         $allUsers = User::all();
         // Fetch the user who referred the authenticated user
         $referrer = User::where('id', $user->ref_by)->first();
 
-        return view('admin.users.detail', compact('pageTitle', 'user', 'widget', 'countries', 'accounts', 'currencies', 'ib_accounts', 'allUsers', 'referrer'));
+        $transactions = Transaction::getUserTransactions($user->id);
+
+
+        return view('admin.users.detail', compact('pageTitle', 'user', 'widget', 'countries', 'accounts', 'currencies', 'ib_accounts', 'allUsers', 'referrer', 'transactions'));
     }
 
 

@@ -4,56 +4,76 @@
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">@lang('Transaction')</h5>
       </div>
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <div>
-          <label for="show-entries">@lang('Show')</label>
-          <select id="show-entries" class="form-select" style="width: auto; display: inline-block;">
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </select>
-          <span>@lang('entries')</span>
-        </div>
+      
 
-        <div>
-          <label for="search">@lang('Search:')</label>
-          <input type="text" id="search" class="form-control" style="width: 200px; display: inline-block;">
-        </div>
-      </div>
+      <div class="card-body p-0 b-radius--10 ">
+            <div class="card-body p-0">
+                <div class="table-responsive--sm table-responsive">
+                    <table class="table table--light style--two custom-data-table">
+                        <thead>
+                            <tr>
+                                <th>@lang('Currency | Wallet')</th>
+                                <th>@lang('User')</th>
+                                <th>@lang('TRX')</th>
+                                <th>@lang('Transacted')</th>
+                                <th>@lang('Amount')</th>
+                                <th>@lang('Post Balance')</th>
+                                <th>@lang('Details')</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($transactions as $trx)
+                                <tr>
+                                    <td>
+                                        <div class="text-end text-lg-start">
+                                            <span>{{ @$trx->wallet->currency->symbol }}</span>
+                                            <br>
+                                            <small>{{ @$trx->wallet->name }} | {{__(strToUpper(@$trx->wallet->type_text))}} </small> 
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">{{ $trx->user->fullname }}</span>
+                                        <br>
+                                        <span class="small"> <a href="{{ appendQuery('search',$trx->user->username) }}"><span>@</span>{{ $trx->user->username }}</a> </span>
+                                    </td>
 
-      <div class="card-body p-0">
-        <div class="table-responsive--sm table-responsive">
-          <table class="table table--light style--two custom-data-table">
-            <thead>
-              <tr>
-                <th>@lang('Date')</th>
-                <th>@lang('Transaction ID')</th>
-                <th>@lang('Type')</th>
-                <th>@lang('Amount')</th>
-                <th>@lang('Gateway')</th>
-                <th>@lang('Status')</th>
-              </tr>
-            </thead>
-            <tbody>
+                                    <td>
+                                        <strong>{{ $trx->trx }}</strong>
+                                    </td>
 
-              <tr>
-                <td>@lang('N/A')</td>
-                <td>@lang('N/A')</td>
-                <td>@lang('N/A')</td>
-                <td>@lang('N/A')</td>
-                <td>@lang('N/A')</td>
-                <td>@lang('N/A')</td>
-              </tr>
-              {{-- @endforeach --}}
-            </tbody>
-          </table>
+                                    <td>
+                                        {{ showDateTime($trx->created_at) }}<br>{{ diffForHumans($trx->created_at) }}
+                                    </td>
+
+                                    <td class="budget">
+                                        <span class="fw-bold @if($trx->trx_type == '+')text--success @else text--danger @endif">
+                                            {{ $trx->trx_type }} {{showAmount($trx->amount)}} {{ __(@$trx->wallet->currency->symbol) }}
+                                        </span>
+                                    </td>
+
+                                    <td class="budget">
+                                        {{ showAmount($trx->post_balance) }} {{ __(@$trx->wallet->currency->symbol) }}
+                                    </td>
+
+                                    <td>{{ __($trx->details) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td class="text-muted text-center" colspan="100%">{{ __($emptyMessage) }}</td>
+                                </tr>
+                            @endforelse
+
+                    </tbody>
+                </table><!-- table end -->
+            </div>
         </div>
-      </div>
-      {{-- <div class="card-footer">
-        for pagination
-      </div> --}}
-    </div>
+        </div>
+        @if($transactions->hasPages())
+        <div class="card-footer py-4">
+            {{ paginateLinks($transactions) }}
+        </div>
+        @endif
+    </div><!-- card end -->
   </div>
 </div>
 

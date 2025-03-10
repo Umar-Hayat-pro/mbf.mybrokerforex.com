@@ -23,14 +23,26 @@ class Transaction extends Model
     public function amountWithoutCharge(): Attribute
     {
         return new Attribute(
-            get: fn () => $this->amount - $this->charge
+            get: fn() => $this->amount - $this->charge
         );
     }
 
     public function accessCombineValue()
     {
         return [
-            'wallet' => [Wallet::class,'combineValue']
+            'wallet' => [Wallet::class, 'combineValue']
         ];
     }
+    // Get User Transactions 
+    public static function getUserTransactions($userId)
+    {
+        return self::with('wallet.currency', 'user')
+            ->where('user_id', $userId)
+            ->searchable(['trx', 'user:username'])
+            ->filter(['trx_type', 'remark', 'wallet.currency:symbol'])
+            ->dateFilter()
+            ->orderBy('id', 'desc')
+            ->paginate(getPaginate());
+    }
+
 }

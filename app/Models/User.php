@@ -152,5 +152,16 @@ class User extends Authenticatable
         return $this->hasMany(FormIb::class, 'user_id'); // Adjust the foreign key if needed
     }
 
+    // Get the widget data of the user in active/user/details 
+    public function getWidgetStats()
+    {
+        return [
+            'total_trade' => Trade::where('trader_id', $this->id)->count(),
+            'total_order' => Trade::where('order_id', $this->id)->count(),
+            'total_deposit' => Deposit::where('user_id', $this->id)->where('status', Status::PAYMENT_SUCCESS)->count(),
+            'total_transaction' => Transaction::where('user_id', $this->id)->count(),
+        ];
+    }
+
 
 }

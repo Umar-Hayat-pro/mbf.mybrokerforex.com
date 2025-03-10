@@ -188,7 +188,7 @@
         <x-user-detail.partner :user="$user" :ibaccount="$ib_accounts" />
       </div>
       <div class="tab-pane fade" id="transaction-tab-pane" role="tabpanel" aria-labelledby="transaction-tab">
-        <x-user-detail.transaction :user="$user" />
+        <x-user-detail.transaction :user="$user" :transactions="$transactions" />
       </div>
       <div class="tab-pane fade" id="referals-tab-pane" role="tabpanel" aria-labelledby="referals-tab">
         <x-user-detail.referral :user='$user' :allUsers="$allUsers" :referrer="$referrer" />

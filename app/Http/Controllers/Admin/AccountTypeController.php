@@ -360,6 +360,7 @@ class AccountTypeController extends Controller
     {
         $user = Auth::user();
 
+        // Fetch accounts from mt5_users
         $accounts = DB::connection('mbf-dbmt5')
             ->table('mt5_users')
             ->where('Email', $user->email)
@@ -371,14 +372,19 @@ class AccountTypeController extends Controller
             })
             ->get();
 
-        // Separate accounts into demo and real
-        $demo = $accounts->filter(function ($account) {
-            return stripos($account->Group, 'demo') !== false;
+        // Fetch user's stored accounts from user_accounts
+        $storedAccounts = UserAccounts::where('User_Id', $user->id)->get();
+
+        // Attach master password if the account exists in user_accounts
+        $accounts = $accounts->map(function ($account) use ($storedAccounts) {
+            $storedAccount = $storedAccounts->firstWhere('Account', $account->Login);
+            $account->Master_Password = $storedAccount->Master_Password ?? null; // Assign password if found, otherwise null
+            return $account;
         });
 
-        $real = $accounts->filter(function ($account) {
-            return stripos($account->Group, 'real') !== false;
-        });
+        // Separate into demo and real accounts
+        $demo = $accounts->filter(fn($account) => stripos($account->Group, 'demo') !== false);
+        $real = $accounts->filter(fn($account) => stripos($account->Group, 'real') !== false);
 
         $pageTitle = 'User Accounts';
 
