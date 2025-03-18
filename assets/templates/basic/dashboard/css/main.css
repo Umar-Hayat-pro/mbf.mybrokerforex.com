@@ -2336,9 +2336,9 @@ input[type=number] {
 }
 
 .pagination .page-item.disabled .page-link {
-    background-color: #181818;
-    border: 1px solid #454545;
-    color: hsl(var(--light) / 0.6);
+    background-color: #ffffff;
+    border: 1px solid #dc3545;
+    color: hsl(0deg 0% 0%);
 }
 
 /* ================================= Pagination Css End =========================== */
@@ -2488,13 +2488,13 @@ input[type=number] {
     margin: 0;
     border-collapse: collapse;
     border-collapse: separate;
-    border-spacing: 0px 0px;
+    
 }
 
 .table thead tr th {
-    background-color: transparent;
+    background-color: #E3373F;
     padding: 10px 15px;
-    color: hsl(var(--body-color));
+    color: #fff;
     font-family: var(--heading-font);
     font-weight: 400;
     border-bottom: 0;
@@ -2506,8 +2506,8 @@ input[type=number] {
 }
 
 .table tbody {
-    border: 0 !important;
-    background-color: transparent;
+   
+    background-color: #00000008;
 }
 
 .table tbody tr:last-child {

@@ -25,6 +25,39 @@
             <div class="tab-pane fade show active" id="real-tab-pane" role="tabpanel" aria-labelledby="real-tab">
                 <div class="row gy-4">
                     @forelse($real as $real_acc)
+                        <!-- Leverage Change Modal for Demo Accounts -->
+                        <div class="modal fade" id="leverageModal-{{ $real_acc->Login }}" tabindex="-1"
+                            aria-labelledby="leverageModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="leverageModalLabel">@lang('Change Leverage')</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form id="leverageForm-{{ $real_acc->Login }}"
+                                            action="{{-- route('user.change.leverage') --}}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="account_id" value="{{ $real_acc->Login }}">
+                                            <span>{{ $real_acc->Login }}</span>
+                                            <div class="mb-3">
+                                                <label for="leverage" class="form-label">@lang('Select Leverage')</label>
+                                                <select class="form-select" name="leverage" id="leverage">
+                                                    <option value="100">100</option>
+                                                    <option value="200">200</option>
+                                                    <option value="300">300</option>
+                                                    <option value="400">400</option>
+                                                    <option value="500">500</option>
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">@lang('Update Leverage')</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Model ends here for real accounts --}}
                         <div class="col-lg-4 col-md-6 d-flex align-items-stretch">
                             <div class="card rounded-10 shadow-sm text-center flex-fill">
                                 <div class="card-body d-flex flex-column justify-content-between">
@@ -76,9 +109,13 @@
                                                 </li>
                                                 <div class="dropdown-divider my-2" style="border-top: 1px solid grey;"></div>
                                                 <li class="dropdown-item" style="font-size: 12px;">
-                                                    <a href="#" style="text-decoration: none; color: inherit;">
-                                                        @lang('Change Leverage')</a>
+                                                    <a href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#leverageModal-{{ $real_acc->Login }}"
+                                                        style="text-decoration: none; color: inherit;">
+                                                        @lang('Change Leverage')
+                                                    </a>
                                                 </li>
+
                                                 <div class="dropdown-divider my-2" style="border-top: 1px solid grey;"></div>
                                                 <li class="dropdown-item" style="font-size: 12px;">
                                                     <a href="#" style="text-decoration: none; color: inherit;">
@@ -145,6 +182,38 @@
             <div class="tab-pane fade" id="demo-tab-pane" role="tabpanel" aria-labelledby="demo-tab">
                 <div class="row gy-4">
                     @forelse($demo as $acc)
+                        <!-- Leverage Change Modal for Real Accounts -->
+                        <div class="modal fade" id="leverageModal-{{ $acc->Login }}" tabindex="-1"
+                            aria-labelledby="leverageModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="leverageModalLabel">@lang('Change Leverage')</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form id="leverageForm-{{ $acc->Login }}"
+                                            action="{{-- route('user.change.leverage') --}}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="account_id" value="{{ $real_acc->Login }}">
+                                            <div class="mb-3">
+                                                <label for="leverage" class="form-label">@lang('Select Leverage')</label>
+                                                <select class="form-select" name="leverage" id="leverage">
+                                                    <option value="100">100</option>
+                                                    <option value="200">200</option>
+                                                    <option value="300">300</option>
+                                                    <option value="400">400</option>
+                                                    <option value="500">500</option>
+                                                </select>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">@lang('Update Leverage')</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Model ends here-->
                         <div class="col-lg-4 col-md-6 d-flex align-items-stretch">
                             <div class="card rounded-10 shadow-sm text-center flex-fill">
                                 <div class="card-body d-flex flex-column justify-content-between">
@@ -195,9 +264,13 @@
                                                 </li>
                                                 <div class="dropdown-divider my-2" style="border-top: 1px solid grey;"></div>
                                                 <li class="dropdown-item" style="font-size: 12px;">
-                                                    <a href="#" style="text-decoration: none; color: inherit;">
-                                                        @lang('Change Leverage')</a>
+                                                    <a href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#leverageModal-{{ $acc->Login }}"
+                                                        style="text-decoration: none; color: inherit;">
+                                                        @lang('Change Leverage')
+                                                    </a>
                                                 </li>
+
                                                 <div class="dropdown-divider my-2" style="border-top: 1px solid grey;"></div>
                                                 <li class="dropdown-item" style="font-size: 12px;">
                                                     <a href="#" style="text-decoration: none; color: inherit;">
@@ -250,6 +323,8 @@
                                 </div>
                             </div>
                         </div>
+
+
                     @empty
                         <div class="col-12 text-center">
                             <p class="text-muted">{{ __($emptyMessage) }}</p>
@@ -259,6 +334,9 @@
             </div>
         </div>
     </div>
+
+
+
 @endsection
 
 <style>

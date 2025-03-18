@@ -35,8 +35,8 @@ class UserController extends Controller
             ->select('id', 'market_id', 'coin_id')
             ->with('market:id,name,currency_id', 'coin:id,name,symbol', 'market.currency:id,name,symbol', 'marketData:id,pair_id,price,percent_change_1h,percent_change_24h,html_classes,market_cap')
             ->get();
-		
-		// Get raw account data first
+
+        // Get raw account data first
         $account = DB::connection('mbf-dbmt5')
             ->table('mt5_users')
             ->where('Email', $user->email)
@@ -49,12 +49,12 @@ class UserController extends Controller
         // Log the actual column names
         if ($account) {
             \Log::info('MT5 Table Columns:', [
-                'columns' => array_keys((array)$account)
+                'columns' => array_keys((array) $account)
             ]);
         }
 
         // Create trading account with default values
-        $tradingAccount = (object)[
+        $tradingAccount = (object) [
             'balance' => 0,
             'equity' => 0,
             'margin' => 0,
@@ -64,12 +64,12 @@ class UserController extends Controller
 
         if ($account) {
             // Get the actual column names from the account object
-            $columns = array_keys((array)$account);
-            
+            $columns = array_keys((array) $account);
+
             // Map the values based on what's available
             foreach ($columns as $column) {
                 $columnLower = strtolower($column);
-                
+
                 if (strpos($columnLower, 'balance') !== false) {
                     $tradingAccount->balance = $account->$column;
                 }
@@ -477,12 +477,8 @@ class UserController extends Controller
 
     public function easyWithdraw(Request $request)
     {
-        $validatedData = $request->validate(
-            [
-                'amount' => 'required|integer',
-            ]
-        );
-        $amount = $validatedData('amount');
+
+        $amount = $request->amount;
         $gateways = GatewayCurrency::whereHas('method', function ($gate) {
             $gate->where('status', Status::ENABLE);
         })->with('method:id,code,crypto')->get();
@@ -544,11 +540,11 @@ class UserController extends Controller
         return to_route('user.home')->withNotify($notify);
     }
 
-	public function tradeHistory()
+    public function tradeHistory()
     {
         $pageTitle = 'Trade History';
         $user = auth()->user();
-        
+
         // Get user logins for the filter
         $userLogins = DB::connection('mbf-dbmt5')
             ->table('mt5_users')
@@ -559,29 +555,29 @@ class UserController extends Controller
         // Get trades based on selected login
         $selectedLogin = request('login', 'all');
         $trades = Trade::where('trader_id', $user->id);
-        
+
         if ($selectedLogin !== 'all') {
             $trades = $trades->where('Login', $selectedLogin);
         }
-        
+
         $trades = $trades->with(['pair'])->orderBy('id', 'desc')->paginate(getPaginate());
 
         // Get account data from mt5_accounts table
         $mt5Account = DB::connection('mbf-dbmt5')
             ->table('mt5_accounts')
-            ->when($selectedLogin !== 'all', function($query) use ($selectedLogin) {
+            ->when($selectedLogin !== 'all', function ($query) use ($selectedLogin) {
                 return $query->where('Login', $selectedLogin);
             })
-            ->when($selectedLogin === 'all', function($query) use ($userLogins) {
+            ->when($selectedLogin === 'all', function ($query) use ($userLogins) {
                 return $query->whereIn('Login', $userLogins);
             })
             ->first();
 
         // Create trading account object with direct column mapping
-        $tradingAccount = (object)[
+        $tradingAccount = (object) [
             'balance' => $mt5Account->Balance ?? 0,
             'equity' => $mt5Account->Equity ?? 0,
-			'credit' => $mt5Account->Credit ?? 0,
+            'credit' => $mt5Account->Credit ?? 0,
             'margin' => $mt5Account->Margin ?? 0,
             'freeMargin' => $mt5Account->MarginFree ?? 0,
             'marginLevel' => $mt5Account->MarginLevel ?? 0
@@ -594,12 +590,12 @@ class UserController extends Controller
             'userLogins'
         ));
     }
-	
-	public function openOrders()
+
+    public function openOrders()
     {
         $pageTitle = 'Open Orders';
         $user = auth()->user();
-        
+
         // Get user logins for the filter
         $userLogins = DB::connection('mbf-dbmt5')
             ->table('mt5_users')
@@ -609,13 +605,13 @@ class UserController extends Controller
 
         // Get trades based on selected login
         $selectedLogin = request('login', 'all');
-        
+
         // Get open orders
         $openOrders = DB::connection('mbf-dbmt5')
             ->table('mt5_trades')
             ->whereIn('Login', $userLogins)
             ->where('Action', 'like', '%pending%')
-            ->when($selectedLogin !== 'all', function($query) use ($selectedLogin) {
+            ->when($selectedLogin !== 'all', function ($query) use ($selectedLogin) {
                 return $query->where('Login', $selectedLogin);
             })
             ->orderBy('Time', 'DESC')
@@ -624,16 +620,16 @@ class UserController extends Controller
         // Get account data from mt5_accounts table
         $mt5Account = DB::connection('mbf-dbmt5')
             ->table('mt5_accounts')
-            ->when($selectedLogin !== 'all', function($query) use ($selectedLogin) {
+            ->when($selectedLogin !== 'all', function ($query) use ($selectedLogin) {
                 return $query->where('Login', $selectedLogin);
             })
-            ->when($selectedLogin === 'all', function($query) use ($userLogins) {
+            ->when($selectedLogin === 'all', function ($query) use ($userLogins) {
                 return $query->whereIn('Login', $userLogins);
             })
             ->first();
 
         // Create trading account object with direct column mapping
-        $tradingAccount = (object)[
+        $tradingAccount = (object) [
             'balance' => $mt5Account->Balance ?? 0,
             'equity' => $mt5Account->Equity ?? 0,
             'credit' => $mt5Account->Credit ?? 0,
@@ -649,6 +645,6 @@ class UserController extends Controller
             'userLogins'
         ));
     }
-	
-	
+
+
 }

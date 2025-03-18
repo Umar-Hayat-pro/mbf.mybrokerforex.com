@@ -398,7 +398,10 @@ class AccountTypeController extends Controller
         $manager = '10007';
         $manager_pswd = 'TfTe*wA1';
 
-        // Validate the inputs
+        $pythonExe = env('PYTHON_EXE');
+        $pythonScript = env('PYTHON_SCRIPT');
+
+        // Validate request
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'title' => 'nullable|string|max:255',
@@ -409,99 +412,82 @@ class AccountTypeController extends Controller
             'initial_balance' => 'nullable|numeric|min:0',
         ]);
 
-        // Extract data
+        // Extract user and request info
         $name = $validatedData['name'];
         $lastname = $user->lastname;
+        $password = $validatedData['password'];
         $email = $user->email;
         $country = $user->address->country;
         $city = $user->address->city;
         $state = $user->address->state;
         $address = $user->address->address;
-        $status = $user->kv;
         $zipcode = $user->address->zip;
         $phone = $user->mobile;
-        $company = $user->company ?? 'None';
+        $company = $user->company ?? 'Individual';
         $title = $validatedData['title'] ?? 'default';
         $leverage = $validatedData['leverage'];
         $initialBalance = $validatedData['initial_balance'] ?? 0;
         $group = $validatedData['groups'] ?? 'demo';
         $swapFree = isset($validatedData['swap_free'])
-            ?
-            filter_var(
-                $validatedData['swap_free'],
-                FILTER_VALIDATE_BOOLEAN,
-                FILTER_NULL_ON_FAILURE
-            ) : false;
+            ? filter_var($validatedData['swap_free'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+            : false;
 
-        if ($status == 1) {
-            $status = 'RE';
-        }
-
-        // Determine the group based on country and swap-free status
+        $status = $user->kv == 1 ? 'RE' : null;
         $group = $this->determineGroup($group, $country, $title, $swapFree);
 
-        // Prepare command
-        $outputFile = storage_path('logs/account_create_output.txt');
+        // Build the command
+        $command = escapeshellarg($pythonExe) . " " . escapeshellarg($pythonScript) .
+            " create" .
+            " --first_name " . escapeshellarg($name) .
+            " --last_name " . escapeshellarg($lastname) .
+            " --password " . escapeshellarg($password) .
+            " --group " . escapeshellarg($group) .
+            " --leverage " . escapeshellarg($leverage) .
+            " --email " . escapeshellarg($email) .
+            " --initial_balance " . escapeshellarg($initialBalance) .
+            " --country " . escapeshellarg($country) .
+            " --state " . escapeshellarg($state) .
+            " --city " . escapeshellarg($city) .
+            " --address " . escapeshellarg($address) .
+            " --zipcode " . escapeshellarg($zipcode) .
+            " --company " . escapeshellarg($company) .
+            " --phone " . escapeshellarg($phone) .
+            " --status " . escapeshellarg($status) .
+            " --manager " . escapeshellarg($manager) .
+            " --manager_pswd " . escapeshellarg($manager_pswd) .
+            " --server_ip " . escapeshellarg($server_ip);
 
-        $command = "C:\\AccountCreate\\bin\\Release\\net8.0\\publish\\AccountCreate.exe" .
-            " " . escapeshellarg($name) .
-            " " . escapeshellarg($lastname) .
-            " " . escapeshellarg($group) .
-            " " . escapeshellarg($leverage) .
-            " " . escapeshellarg($email) .
-            " " . escapeshellarg($initialBalance) .
-            " " . escapeshellarg($country) .
-            " " . escapeshellarg($state) .
-            " " . escapeshellarg($city) .
-            " " . escapeshellarg($address) .
-            " " . escapeshellarg($zipcode) .
-            " " . escapeshellarg($company) .
-            " " . escapeshellarg($phone) .
-            " " . escapeshellarg($status) .
-            " " . $manager .
-            " " . $manager_pswd .
-            " " . $server_ip;
-
-        //  <first name> <last name> <group> <leverage> <email> <initial balance> <country> <state> <city> <address> <zipcode> <company> <phone> <status> <manager ID> <manager password> <server ip>
-
-        // Execute command
+        // Execute the command
+        $output = [];
         $returnVar = 0;
-
-
-
         exec($command, $output, $returnVar);
 
+        // Log the output
+        \Log::info('Account Creation Output:', $output);
 
-
-
-
-        // Check for errors
-        if ($returnVar !== 0) {
-            $notify[] = ['error', 'Failed to create account. Please try again.'];
-            return redirect()->route('user.user-accounts')->withNotfiy($notify);
-        }
-
-        // Extract the account number and master passsword
-        $accountData = explode(' - ', trim($output[0] ?? ''));
-
-
-        if (count($accountData) !== 2) {
-            $notify[] = ['error', 'An Error has occured while trying to make the account, please try again later'];
+        // Check if the script failed
+        if ($returnVar !== 0 || empty($output)) {
+            \Log::error('Python script failed', ['command' => $command, 'output' => $output, 'status' => $returnVar]);
+            $notify[] = ['error', 'Account creation failed. Please try again.'];
             return redirect()->route('user.user-accounts')->withNotify($notify);
         }
 
-        $accountNumber = trim($accountData[0]);
-        $masterPassword = trim($accountData[1]);
+        // Parse the output JSON
+        $data = json_decode($output[0], true);
+
+        if (!$data || !isset($data['Login']) || !isset($data['MasterPassword'])) {
+            $notify[] = ['error', 'Invalid response from account creation system.'];
+            return redirect()->route('user.user-accounts')->withNotify($notify);
+        }
+
+        // Save login credentials to user accounts table
         $userAccount = new UserAccounts();
         $userAccount->User_Id = $user->id;
-        $userAccount->Account = $accountNumber;
-        $userAccount->Master_Password = $masterPassword;
+        $userAccount->Account = $data['Login'];
+        $userAccount->Master_Password = $data['MasterPassword'];
         $userAccount->save();
 
-        // Log output for debugging
-        file_put_contents($outputFile, implode("\n", $output));
-
-        // Notify user of success
+        // Success
         $notify[] = ['success', 'Account created successfully'];
         return redirect()->route('user.user-accounts')->withNotify($notify);
     }
@@ -565,4 +551,6 @@ class AccountTypeController extends Controller
                 return $baseGroup . '\\Default\\GLOBAL_USD'; // Default case
         }
     }
+
+
 }
